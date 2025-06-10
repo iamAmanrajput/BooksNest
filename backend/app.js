@@ -7,6 +7,9 @@ dotenv.config();
 const { dbConnect } = require("./config/db");
 dbConnect();
 
+const { cloudinaryConnect } = require("./config/cloudinary");
+cloudinaryConnect();
+
 const PORT = process.env.PORT || 4000;
 
 app.get("/", (req, res) => {

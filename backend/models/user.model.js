@@ -18,6 +18,12 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: true,
+      select: false,
+    },
+    gender: {
+      type: String,
+      enum: ["male", "female"],
+      required: true,
     },
     profilePic: {
       publicId: {

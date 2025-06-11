@@ -19,6 +19,15 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    profilePic: {
+      publicId: {
+        type: String,
+      },
+      imageUrl: {
+        type: String,
+        default: "",
+      },
+    },
     role: {
       type: String,
       enum: ["user", "admin"],

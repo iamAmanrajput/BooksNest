@@ -1,4 +1,5 @@
 const User = require("../models/user.model");
+const jwt = require("jsonwebtoken");
 
 // Register User
 module.exports.register = async (req, res) => {
@@ -47,3 +48,80 @@ module.exports.register = async (req, res) => {
 };
 
 // Login User
+module.exports.login = async (req, res) => {
+  const { email, password } = req.body;
+  console.log(email, " ", password);
+
+  // Validate input
+  if (!email || !password) {
+    return res.status(400).json({
+      success: false,
+      message: "All fields are required",
+    });
+  }
+
+  try {
+    // Check if user exists
+    const user = await User.findOne({ email }).select("+password");
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Check if user is blocked
+    if (user.isBlocked) {
+      return res.status(403).json({
+        success: false,
+        message: "Your account is blocked",
+      });
+    }
+
+    // Validate password
+    const isPasswordMatched = await user.comparePassword(password);
+    if (!isPasswordMatched) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid credentials",
+      });
+    }
+
+    // Generate JWT token
+    const payload = {
+      _id: user._id,
+      role: user.role,
+    };
+
+    const token = jwt.sign(payload, process.env.JWT_SECRET, {
+      expiresIn: "7d",
+    });
+
+    // Set token in HTTP-only cookie
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production", // Use true in production
+      sameSite: "Lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "User logged in successfully",
+      user: {
+        _id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        role: user.role,
+        gender: user.gender,
+        profilePic: user.profilePic.imageUrl,
+      },
+    });
+  } catch (error) {
+    console.error("Login Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong. Please try again later.",
+    });
+  }
+};

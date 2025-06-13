@@ -17,18 +17,31 @@ const bookSchema = new mongoose.Schema(
       default: 1,
       min: [0, "Quantity cannot be negative"],
     },
-    authors: {
-      type: [String],
-      default: [],
+    availableQuantity: {
+      type: Number,
+      required: true,
+      min: [0, "Quantity cannot be negative"],
     },
-    genres: {
-      type: [String],
-      default: [],
-    },
-    keywords: {
-      type: [String],
-      default: [],
-    },
+    authors: [
+      {
+        type: String,
+        required: true,
+        trim: true,
+      },
+    ],
+    genres: [
+      {
+        type: String,
+        required: true,
+        trim: true,
+      },
+    ],
+    keywords: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
     language: {
       type: String,
       default: "English",
@@ -42,10 +55,6 @@ const bookSchema = new mongoose.Schema(
         type: String,
         default: "",
       },
-    },
-    createdAt: {
-      type: Date,
-      default: Date.now,
     },
   },
   { timestamps: true }

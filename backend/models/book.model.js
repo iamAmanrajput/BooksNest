@@ -44,7 +44,7 @@ const bookSchema = new mongoose.Schema(
     ],
     language: {
       type: String,
-      default: "English",
+      default: "english",
       trim: true,
     },
     coverImage: {

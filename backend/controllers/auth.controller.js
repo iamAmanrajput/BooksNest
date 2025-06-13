@@ -50,7 +50,6 @@ module.exports.register = async (req, res) => {
 // Login User
 module.exports.login = async (req, res) => {
   const { email, password } = req.body;
-  console.log(email, " ", password);
 
   // Validate input
   if (!email || !password) {
@@ -138,7 +137,7 @@ module.exports.logout = async (req, res) => {
 
     return res
       .status(200)
-      .json({ success: false, message: "Successfully logged out" });
+      .json({ success: true, message: "Successfully logged out" });
   } catch (error) {
     console.error("Logout error:", error);
     return res.status(500).json({ message: "Logout failed" });

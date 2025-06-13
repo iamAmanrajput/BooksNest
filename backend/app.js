@@ -10,10 +10,13 @@ dbConnect();
 const { cloudinaryConnect } = require("./config/cloudinary");
 cloudinaryConnect();
 
+const cookieParser = require("cookie-parser");
+
 const PORT = process.env.PORT || 4000;
 
 // Middleware
 app.use(express.json());
+app.use(cookieParser());
 
 // routes
 app.use("/api/v1/auth", require("./routes/auth.routes"));

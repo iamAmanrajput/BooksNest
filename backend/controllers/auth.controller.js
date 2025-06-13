@@ -98,7 +98,7 @@ module.exports.login = async (req, res) => {
     });
 
     // Set token in HTTP-only cookie
-    res.cookie("token", token, {
+    res.cookie("accessToken", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production", // Use true in production
       sameSite: "Lax",
@@ -123,5 +123,24 @@ module.exports.login = async (req, res) => {
       success: false,
       message: "Something went wrong. Please try again later.",
     });
+  }
+};
+
+// Logout User
+module.exports.logout = async (req, res) => {
+  try {
+    // Clear the JWT cookie
+    res.clearCookie("accessToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "Lax",
+    });
+
+    return res
+      .status(200)
+      .json({ success: false, message: "Successfully logged out" });
+  } catch (error) {
+    console.error("Logout error:", error);
+    return res.status(500).json({ message: "Logout failed" });
   }
 };

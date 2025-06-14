@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const Review = require("./review.model");
 
 const bookSchema = new mongoose.Schema(
   {
@@ -47,6 +48,13 @@ const bookSchema = new mongoose.Schema(
       default: "english",
       trim: true,
     },
+    rating: {
+      type: Number,
+      min: 1,
+      max: 5,
+      default: 5,
+    },
+    reviews: [{ type: mongoose.Schema.Types.ObjectId, ref: "Review" }],
     coverImage: {
       publicId: {
         type: String,
@@ -59,5 +67,17 @@ const bookSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Calculate the average rating of a book
+bookSchema.methods.calculateRating = async function () {
+  const reviews = await Review.find({ book: this._id });
+  if (reviews.length > 0) {
+    const totalRating = reviews.reduce((acc, review) => acc + review.rating, 0);
+    this.rating = totalRating / reviews.length;
+  } else {
+    this.rating = 5;
+  }
+  await this.save();
+};
 
 module.exports = mongoose.model("Book", bookSchema);

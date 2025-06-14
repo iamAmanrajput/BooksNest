@@ -77,6 +77,13 @@ module.exports.login = async (req, res) => {
       });
     }
 
+    if (user.role === "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Access Denied, Users Only",
+      });
+    }
+
     // Validate password
     const isPasswordMatched = await user.comparePassword(password);
     if (!isPasswordMatched) {

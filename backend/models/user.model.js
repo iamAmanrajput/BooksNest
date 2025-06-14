@@ -47,6 +47,13 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    borrowedRecords: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "BorrowRecord",
+        default: [],
+      },
+    ],
     wishlist: [
       {
         type: mongoose.Schema.Types.ObjectId,

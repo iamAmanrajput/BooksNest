@@ -78,3 +78,59 @@ exports.createBook = async (req, res) => {
     });
   }
 };
+
+// update Book
+exports.updateBook = async (req, res) => {
+  const { id: bookId } = req.params;
+  try {
+    const {
+      title,
+      description,
+      quantity,
+      authors,
+      genres,
+      keywords,
+      language,
+    } = req.body;
+    let updatedData = {};
+    if (title?.trim()) {
+      updatedData.title = title.trim();
+    }
+    if (description?.trim()) {
+      updatedData.description = description.trim();
+    }
+    if (quantity) {
+      updatedData.quantity = Number(quantity);
+      updatedData.availableQuantity = Number(quantity);
+    }
+
+    if (authors && authors.length !== 0) {
+      updatedData.authors = authors;
+    }
+
+    if (genres && genres.length !== 0) {
+      updatedData.genres = genres;
+    }
+    if (keywords && keywords.length !== 0) {
+      updatedData.keywords = keywords;
+    }
+    if (language?.trim()) {
+      updatedData.language = language.trim();
+    }
+    const updatedBook = await Book.findByIdAndUpdate(bookId, updatedData, {
+      new: true,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Book Updated Successfully",
+      data: updatedBook,
+    });
+  } catch (error) {
+    console.log("Updating Book Error : ", error);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong. Please try again later.",
+    });
+  }
+};

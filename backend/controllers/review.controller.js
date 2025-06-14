@@ -1,4 +1,5 @@
 const Review = require("../models/review.model");
+const Book = require("../models/book.model");
 
 // create Review
 exports.createReview = async (req, res) => {
@@ -39,6 +40,16 @@ exports.createReview = async (req, res) => {
       rating: numericRating,
       comment: comment.trim(),
     });
+
+    newReview.populate("user", "fullName");
+
+    let book = await Book.findByIdAndUpdate(
+      bookId,
+      { $push: { reviews: newReview._id } },
+      { new: true }
+    );
+
+    await book.calculateRating();
 
     return res.status(201).json({
       success: true,

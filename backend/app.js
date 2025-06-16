@@ -33,6 +33,7 @@ app.use("/api/v1/review", require("./routes/review.routes"));
 // Admin - Routes
 app.use("/api/v1/book", require("./routes/book.routes"));
 app.use("/api/v1/user", require("./routes/user.routes"));
+app.use("/api/v1/borrow", require("./routes/borrow.routes"));
 
 app.get("/", (req, res) => {
   res.send("<h1>📚 Welcome to BooksNest Backend</h1>");

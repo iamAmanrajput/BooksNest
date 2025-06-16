@@ -10,10 +10,13 @@ const notificationSchema = new mongoose.Schema(
     type: {
       type: String,
       enum: [
-        "due_reminder",
-        "queue_notification",
-        "fine_alert",
-        "book_available",
+        "due_reminder", // due date near or passed
+        "queue_notification", // book assigned from queue
+        "fine_alert", // fine exists
+        "book_available", // book became available
+        "queue_reminder", // 2 din pehle reminder
+        "request_approved", // book issued by admin / book returned by admin
+        "request_rejected", // request rejected
       ],
       required: true,
     },
@@ -28,10 +31,6 @@ const notificationSchema = new mongoose.Schema(
     isRead: {
       type: Boolean,
       default: false,
-    },
-    relatedBorrowRecord: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "BorrowRecord",
     },
   },
   {

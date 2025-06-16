@@ -83,7 +83,7 @@ exports.handleBorrowRequest = async (req, res) => {
         record.userId.email,
         `Borrow request for '${book.title}' was rejected.`,
         commonEmailTemplate(
-          "`Your borrow request for '${book.title}' was rejected.`"
+          `Your borrow request for ${book.title} was rejected.`
         )
       );
 

@@ -242,7 +242,11 @@ exports.handleReturnRequest = async (req, res) => {
       mailSender(
         record.userId.email,
         "📚 Your Book Has Been Successfully Returned",
-        returnConfirmationEmail(record.userId.email, record.bookId.title, fine)
+        returnConfirmationEmail(
+          record.userId.fullName,
+          record.bookId.title,
+          fine
+        )
       ),
     ]);
 

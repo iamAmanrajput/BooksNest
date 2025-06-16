@@ -323,3 +323,110 @@ exports.handleReturnRequest = async (req, res) => {
       .json({ success: false, message: "Internal Server Error" });
   }
 };
+
+// Renew Book
+exports.renewBook = async (req, res) => {
+  try {
+    const { requestId } = req.params;
+
+    const record = await BorrowRecord.findById(requestId)
+      .populate("userId bookId");
+
+    if (!record) {
+      return res.status(404).json({
+        success: false,
+        message: "Borrow record not found",
+      });
+    }
+
+    if (record.status !== "issued") {
+      return res.status(400).json({
+        success: false,
+        message: "Book is not issued",
+      });
+    }
+
+    if (record.renewCount >= 2) {
+      return res.status(400).json({
+        success: false,
+        message: "You have reached the maximum renew limit",
+      });
+    }
+
+    const queue = await BookQueue.findOne({ book: record.bookId._id });
+
+    // If queue exists and has users, renewal not allowed
+    if (queue && queue.queue && queue.queue.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Book is not available for renewal as it is in queue",
+      });
+    }
+
+    // Fine Calculation + Early Renew Block
+    const today = new Date();
+    const due = new Date(record.dueDate);
+
+    // Prevent early renewals
+    if (today <= due) {
+      return res.status(400).json({
+        success: false,
+        message: "You can only renew the book after the due date has passed.",
+      });
+    }
+
+    // Fine calculation
+    let fine = 0;
+    const lateDays = Math.ceil((today - due) / (1000 * 60 * 60 * 24));
+    fine = lateDays * 5;
+    record.fine = (record.fine || 0) + fine;
+
+    // Update user fineAmount and send fine notification
+    if (fine > 0) {
+      await Promise.all([
+        User.findByIdAndUpdate(record.userId._id, {
+          $inc: { fineAmount: fine },
+        }),
+        Notification.create({
+          user: record.userId._id,
+          type: "fine_alert",
+          title: "Fine Incurred",
+          message: `Your book '${record.bookId.title}' is overdue. A fine of ₹${fine} has been added to your account.`,
+        }),
+      ]);
+    }
+
+    // Renew the book
+    record.renewCount += 1;
+    record.lastRenewedAt = new Date();
+
+    // Extend due date by 7 days
+    const newDueDate = new Date();
+    newDueDate.setDate(newDueDate.getDate() + 7);
+    record.dueDate = newDueDate;
+
+    await Promise.all([
+      record.save(),
+      mailSender(
+        record.userId.email,
+        "Successfully Renewed the Book",
+        commonEmailTemplate(
+          `Your book '${record.bookId.title}' has been renewed successfully. New due date is ${newDueDate.toDateString()}.`
+        )
+      ),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      message: "Book renewed successfully",
+    });
+
+  } catch (error) {
+    console.error("Renew Book Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+

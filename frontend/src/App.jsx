@@ -1,10 +1,12 @@
 import React from "react";
-import { Button } from "./components/ui/button";
+import Signup from "./pages/user/Signup";
+import Login from "./pages/user/Login";
+import Navbar from "./components/common/Navbar";
 
 const App = () => {
   return (
     <div>
-      <Button className="font-bold text-xl">Hello</Button>
+      <Navbar />
     </div>
   );
 };

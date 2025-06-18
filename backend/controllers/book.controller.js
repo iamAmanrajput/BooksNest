@@ -134,3 +134,25 @@ exports.updateBook = async (req, res) => {
     });
   }
 };
+
+// get featured Book
+exports.getFeaturedBooks = async (req, res) => {
+  try {
+    const books = await Book.find().sort({ rating: -1 }).limit(10);
+
+    if (!books || books.length === 0) {
+      return res
+        .status(400)
+        .json({ success: false, message: "No Books Available", data: [] });
+    }
+
+    return res
+      .status(200)
+      .json({ success: true, message: "Featured Books Fetched", data: books });
+  } catch (error) {
+    console.error("Error in getFeaturedBooks:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Server Error", error: error.message });
+  }
+};

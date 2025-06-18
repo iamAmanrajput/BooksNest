@@ -19,7 +19,6 @@ const HomePage = () => {
           title="Active Borrowings"
           value={5}
           color="blue"
-          lightColor="blue"
         />
         <StatCard
           icon={RotateCcw}

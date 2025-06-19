@@ -12,6 +12,6 @@ router.post("/createBook", isLoggedIn, isAdmin, createBook);
 
 router.patch("/updateBook/:id", isLoggedIn, isAdmin, updateBook);
 
-router.get("/featuredBook", isLoggedIn, getFeaturedBooks);
+router.get("/featuredBook", getFeaturedBooks);
 
 module.exports = router;

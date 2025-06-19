@@ -13,15 +13,17 @@ import { Link } from "react-router-dom";
 
 const Footer = () => {
   return (
-    <footer className="w-full border-t text-slate-300">
+    <footer className="w-full border-t bg-white dark:bg-[#09090B]">
       {/* Main Footer Content */}
       <div className="px-4 py-10">
         <div className="grid grid-cols-1 md:grid-cols-1 gap-8 lg:gap-12">
           {/* Library Info */}
           <div className="space-y-6">
             <div>
-              <h3 className="text-2xl font-bold text-white mb-4">BooksNest</h3>
-              <p className="text-slate-400 leading-relaxed">
+              <h3 className="text-2xl font-bold text-customGray dark:text-zinc-100 mb-4">
+                BooksNest
+              </h3>
+              <p className="text-zinc-900 dark:text-zinc-100 leading-relaxed">
                 Empowering minds through knowledge. Our library offers a wide
                 range of books, journals, and digital resources to support
                 learning and research.
@@ -32,15 +34,19 @@ const Footer = () => {
             <div className="space-y-3">
               <div className="flex items-center space-x-3">
                 <Mail className="h-4 w-4 text-blue-400" />
-                <span className="text-sm">booksnest.app@gmail.com</span>
+                <span className="text-sm text-zinc-900 dark:text-zinc-100 ">
+                  booksnest.app@gmail.com
+                </span>
               </div>
               <div className="flex items-center space-x-3">
                 <Phone className="h-4 w-4 text-blue-400" />
-                <span className="text-sm">+91 98765 43210</span>
+                <span className="text-sm text-zinc-900 dark:text-zinc-100">
+                  +91 98765 43210
+                </span>
               </div>
               <div className="flex items-center space-x-3">
                 <MapPin className="h-4 w-4 text-blue-400" />
-                <span className="text-sm">
+                <span className="text-sm text-zinc-900 dark:text-zinc-100">
                   Rohini Sector-22, New Delhi, India
                 </span>
               </div>
@@ -48,7 +54,9 @@ const Footer = () => {
 
             {/* Social Media */}
             <div className="mt-6">
-              <h5 className="text-sm font-medium text-white mb-3">Follow Us</h5>
+              <h5 className="text-sm font-medium text-zinc-900 dark:text-zinc-100 mb-3">
+                Follow Us
+              </h5>
               <div className="flex space-x-3">
                 {[
                   { icon: Facebook, href: "#", label: "Facebook" },
@@ -60,7 +68,7 @@ const Footer = () => {
                   <Link
                     key={label}
                     href={href}
-                    className="w-9 h-9 bg-slate-800 rounded-lg flex items-center justify-center hover:bg-blue-600 transition-colors duration-200 group"
+                    className="w-9 h-9 bg-gray-100 dark:bg-zinc-900  rounded-lg flex items-center justify-center hover:bg-blue-600 cursor-pointer transition-colors duration-200 group"
                     aria-label={label}
                   >
                     <Icon className="h-4 w-4 text-slate-400 group-hover:text-white" />
@@ -77,7 +85,7 @@ const Footer = () => {
       {/* Bottom Footer */}
       <div className="px-4 py-6">
         <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-          <div className="text-sm text-slate-500">
+          <div className="text-sm text-zinc-900 dark:text-zinc-100">
             © 2025 Central Library. All rights reserved.
           </div>
 
@@ -91,7 +99,8 @@ const Footer = () => {
               <Link
                 key={item}
                 href="#"
-                className="text-slate-500 hover:text-white transition-colors duration-200"
+                className="text-zinc-900 dark:text-zinc-100 hover:text-zinc-600
+                  dark:hover:text-zinc-50 transition-colors duration-200"
               >
                 {item}
               </Link>

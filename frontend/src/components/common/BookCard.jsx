@@ -35,7 +35,7 @@ const BookCard = ({ bookData }) => {
             (bookData?.description?.split(" ").length > 16 ? "..." : "")}
         </p>
 
-        {/* Genres */}
+        {/* Genres & Language */}
         <div className="flex flex-wrap gap-2">
           {bookData?.genres?.slice(0, 2).map((genre) => (
             <span
@@ -52,6 +52,11 @@ const BookCard = ({ bookData }) => {
             </span>
           )}
         </div>
+        {bookData?.language && (
+          <span className="inline-block text-center bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-medium px-3 py-1 rounded-full">
+            {bookData.language}
+          </span>
+        )}
       </CardContent>
 
       <CardFooter className="flex w-full flex-wrap justify-between items-center gap-4">

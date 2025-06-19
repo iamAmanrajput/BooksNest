@@ -8,7 +8,7 @@ const {
 } = require("../controllers/book.controller");
 const { isLoggedIn, isAdmin } = require("../middlewares/verifyToken");
 
-router.post("/createBook", isLoggedIn, isAdmin, createBook);
+router.post("/createBook", isLoggedIn, createBook);
 
 router.patch("/updateBook/:id", isLoggedIn, isAdmin, updateBook);
 

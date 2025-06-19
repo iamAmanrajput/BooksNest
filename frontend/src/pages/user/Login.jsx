@@ -55,8 +55,8 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    if (!validateForm()) return;
     try {
+      if (!validateForm()) return;
       const response = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/auth/login`,
         formData,

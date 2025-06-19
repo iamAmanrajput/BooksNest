@@ -12,7 +12,7 @@ import { Star } from "lucide-react";
 
 const BookCard = ({ bookData }) => {
   return (
-    <Card className="w-full max-w-sm md:max-w-md lg:max-w-lg shadow-white-xl border-none rounded-2xl overflow-hidden transition-transform hover:scale-[1.01] duration-300 bg-white dark:bg-zinc-900 cursor-pointer pt-0">
+    <Card className="w-full max-w-sm md:max-w-md lg:max-w-lg shadow-white-xl border-none rounded-2xl overflow-hidden transition-transform hover:scale-[1.01] duration-300 bg-white dark:bg-zinc-900 cursor-pointer pt-0 flex flex-col h-full">
       <img
         src={bookData?.coverImage?.imageUrl}
         alt={bookData?.title}
@@ -23,12 +23,19 @@ const BookCard = ({ bookData }) => {
         <CardTitle className="text-xl font-semibold">
           {bookData?.title}
         </CardTitle>
-        <CardDescription className="text-sm text-muted-foreground">
-          {bookData?.authors?.map((author) => author)}
-        </CardDescription>
+
+        {/* ✅ Multiple Authors */}
+        <div className="flex flex-wrap gap-x-1 text-sm text-muted-foreground">
+          {bookData?.authors?.map((author, idx) => (
+            <span key={idx}>
+              {author}
+              {idx < bookData.authors.length - 1 && ","}
+            </span>
+          ))}
+        </div>
       </CardHeader>
 
-      <CardContent className="space-y-3">
+      <CardContent className="space-y-3 flex-grow">
         {/* Book Description */}
         <p className="text-zinc-700 dark:text-zinc-300 text-sm">
           {bookData?.description?.split(" ").slice(0, 16).join(" ") +

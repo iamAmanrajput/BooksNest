@@ -1,8 +1,29 @@
 import StatCard from "@/components/common/StatCard";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { AlertTriangle, BookOpen, IndianRupee, RotateCcw } from "lucide-react";
-import React from "react";
+import { Button } from "@/components/ui/button";
+import { Star } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 
 const HomePage = () => {
+  const [featuredBooks, setFeaturedBooks] = useState([]);
+
+  useEffect(() => {
+    const fetchFeaturedBooks = async () => {
+      try {
+        // const data = await axios.get(``)
+      } catch (error) {}
+    };
+  }, []);
+
   return (
     <div className="px-4 flex flex-col gap-6">
       {/* 1st box */}
@@ -43,7 +64,71 @@ const HomePage = () => {
           lightColor="red"
         />
       </div>
-      <div className="w-full bg-zinc-500">hello</div>
+      {/* Featured Book */}
+      <div className="w-full  mb-6 rounded-2xl">
+        <h1 className="text-3xl font-bold text-center pt-6 pb-9">
+          Featured Books
+        </h1>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 mb-6 gap-3">
+          <Card className="w-full max-w-sm md:max-w-md lg:max-w-lg shadow-xl border-none rounded-2xl overflow-hidden transition-transform hover:scale-[1.01] duration-300 bg-white dark:bg-zinc-900 cursor-pointer pt-0">
+            <img
+              src="https://images.unsplash.com/photo-1749223928612-e7f5e9a2211f?q=80&w=735&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+              alt="Card image"
+              className="w-full h-48 object-cover"
+            />
+
+            <CardHeader>
+              <CardTitle className="text-xl font-semibold">
+                Explore Top Books
+              </CardTitle>
+              <CardDescription className="text-sm text-muted-foreground">
+                Dive into
+              </CardDescription>
+            </CardHeader>
+
+            <CardContent className="space-y-3">
+              {/* Book Description */}
+              <p className="text-zinc-700 dark:text-zinc-300 text-sm">
+                This book explores how people acquire knowledge and how the mind
+                works while learning new concepts—ideal for educators and
+                lifelong learners.
+              </p>
+
+              {/* Genres */}
+              <div className="flex flex-wrap gap-2">
+                {["Psychology", "Education", "Non-Fiction"].map((genre) => (
+                  <span
+                    key={genre}
+                    className="bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-medium px-3 py-1 rounded-full"
+                  >
+                    {genre}
+                  </span>
+                ))}
+              </div>
+            </CardContent>
+
+            <CardFooter className="flex flex-wrap justify-between items-center gap-4 sm:gap-2">
+              {/* Explore Button */}
+              <Button variant="default" className="rounded-full px-6">
+                Explore Now
+              </Button>
+
+              {/* Rating */}
+              <div className="flex items-center gap-1 text-yellow-500">
+                <Star className="w-4 h-4 fill-yellow-500" />
+                <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                  4.8
+                </span>
+              </div>
+
+              {/* Available Quantity */}
+              <div className="text-sm text-zinc-700 dark:text-zinc-300 ml-auto">
+                <span className="font-medium">Available:</span> 12
+              </div>
+            </CardFooter>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 };

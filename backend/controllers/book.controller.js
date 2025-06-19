@@ -138,7 +138,12 @@ exports.updateBook = async (req, res) => {
 // get featured Book
 exports.getFeaturedBooks = async (req, res) => {
   try {
-    const books = await Book.find().sort({ rating: -1 }).limit(10);
+    const books = await Book.find()
+      .select(
+        "title description availableQuantity authors genres language rating coverImage"
+      )
+      .sort({ rating: -1 })
+      .limit(10);
 
     if (!books || books.length === 0) {
       return res

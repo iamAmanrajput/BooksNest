@@ -32,14 +32,17 @@ const HomePage = () => {
   }, []);
 
   return (
-    <div className="px-4 flex flex-col gap-6">
-      {/* 1st box */}
-      <div className="w-full text-zinc-900 dark:text-zinc-100 bg-zinc-100 dark:bg-zinc-900 mt-6 rounded-2xl h-[10rem] flex items-center hover:shadow-md duration-200">
+    <div className="px-4 flex flex-col gap-6 text-zinc-900 dark:text-zinc-100">
+      {/* Welcome Banner */}
+      <div className="w-full bg-zinc-100 dark:bg-zinc-900 mt-6 rounded-2xl h-[10rem] flex items-center hover:shadow-md transition duration-200">
         <div className="flex flex-col gap-3 px-10">
           <h1 className="text-3xl font-bold">Welcome back, John Doe!</h1>
-          <p>Discover new books and manage your reading journey.</p>
+          <p className="text-zinc-600 dark:text-zinc-400">
+            Discover new books and manage your reading journey.
+          </p>
         </div>
       </div>
+
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <StatCard
@@ -48,35 +51,27 @@ const HomePage = () => {
           value={5}
           color="blue"
         />
-        <StatCard
-          icon={RotateCcw}
-          title="Returned"
-          value={5}
-          color="green"
-          lightColor="green"
-        />
+        <StatCard icon={RotateCcw} title="Returned" value={5} color="green" />
         <StatCard
           icon={AlertTriangle}
           title="Overdue"
           value={5}
           color="orange"
-          lightColor="orange"
         />
-
         <StatCard
           icon={IndianRupee}
           title="Total Fines"
           value={5}
           color="red"
-          lightColor="red"
         />
       </div>
-      {/* Featured Book */}
-      <div className="w-full  mb-6 rounded-2xl">
+
+      {/* Featured Books */}
+      <div className="w-full mb-6 rounded-2xl">
         <h1 className="text-4xl font-bold text-center pt-6 pb-9">
           Featured Books
         </h1>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 mb-6 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
           {featuredBooks?.map((book) => (
             <BookCard key={book?._id} bookData={book} />
           ))}

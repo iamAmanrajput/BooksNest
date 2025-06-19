@@ -1,14 +1,14 @@
 import React from "react";
+import { Route, Routes } from "react-router-dom";
 import HomePage from "./pages/user/HomePage";
 import UserLayout from "./layouts/UserLayout";
-import { Route, Routes } from "react-router-dom";
 import Signup from "./pages/user/Signup";
 import Login from "./pages/user/Login";
 import AdminLogin from "./pages/admin/AdminLogin";
 
 const App = () => {
   return (
-    <div className="w-screen min-h-screen">
+    <div className="min-h-screen w-full bg-white text-zinc-900 dark:bg-zinc-900 dark:text-zinc-100 transition-colors duration-300">
       <Routes>
         <Route
           path="/"

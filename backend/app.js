@@ -4,6 +4,8 @@ const app = express();
 const dotenv = require("dotenv");
 dotenv.config();
 
+const cors = require("cors");
+
 const { dbConnect } = require("./config/db");
 dbConnect();
 
@@ -23,6 +25,14 @@ app.use(
   fileUpload({
     useTempFiles: true,
     tempFileDir: "/tmp",
+  })
+);
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+    credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 

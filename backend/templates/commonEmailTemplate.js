@@ -7,8 +7,8 @@ exports.commonEmailTemplate = (message) => {
   <title>BooksNest</title>
   <style>
     body {
-      background-color: #0f172a;
-      color: #e2e8f0;
+      background-color: #09090B; /* true dark */
+      color: #e2e8f0; /* zinc-200 */
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       margin: 0;
       padding: 0;
@@ -17,9 +17,9 @@ exports.commonEmailTemplate = (message) => {
     .container {
       max-width: 600px;
       margin: 40px auto;
-      background-color: #1e293b;
+      background-color: #18181B; /* zinc-900 */
       border-radius: 12px;
-      padding: 30px 25px;
+      padding: 32px 28px;
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
     }
 
@@ -29,9 +29,9 @@ exports.commonEmailTemplate = (message) => {
     }
 
     .heading {
-      font-size: 22px;
-      font-weight: 600;
-      color: #facc15;
+      font-size: 24px;
+      font-weight: 700;
+      color: #facc15; /* yellow-400 */
     }
 
     .body {
@@ -39,19 +39,21 @@ exports.commonEmailTemplate = (message) => {
       line-height: 1.6;
       color: #e2e8f0;
       text-align: center;
+      margin-top: 10px;
+    }
+
+    .text-bold {
+      font-weight: 600;
+      color: #facc15;
     }
 
     .footer {
       margin-top: 30px;
       font-size: 14px;
       text-align: center;
-      color: #94a3b8;
-      border-top: 1px solid #334155;
+      color: #a1a1aa; /* zinc-400 */
+      border-top: 1px solid #3f3f46; /* zinc-700 */
       padding-top: 20px;
-    }
-
-    .text-bold{
-    font-weight: bold;
     }
 
     @media screen and (max-width: 480px) {

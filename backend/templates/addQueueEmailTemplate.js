@@ -7,8 +7,8 @@ exports.addQueueEmailTemplate = ({ fullName, bookTitle, position }) => {
   <title>Queue Notification</title>
   <style>
     body {
-      background-color: #0f172a;
-      color: #e2e8f0;
+      background-color: #09090B; /* true dark background */
+      color: #e2e8f0; /* zinc-200 like text */
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       margin: 0;
       padding: 0;
@@ -17,28 +17,28 @@ exports.addQueueEmailTemplate = ({ fullName, bookTitle, position }) => {
     .container {
       max-width: 600px;
       margin: 40px auto;
-      background-color: #1e293b;
+      background-color: #18181B; /* zinc-900 like card */
       border-radius: 12px;
-      padding: 30px 25px;
+      padding: 32px 28px;
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
     }
 
     .header {
       text-align: center;
-      margin-bottom: 25px;
+      margin-bottom: 24px;
     }
 
     .heading {
-      font-size: 22px;
-      font-weight: 600;
-      color: #facc15;
+      font-size: 24px;
+      font-weight: 700;
+      color: #facc15; /* yellow-400 for highlight */
     }
 
     .body {
       font-size: 16px;
-      line-height: 1.6;
+      line-height: 1.65;
       color: #e2e8f0;
-      margin-top: 10px;
+      margin-top: 12px;
     }
 
     .highlight {
@@ -50,14 +50,14 @@ exports.addQueueEmailTemplate = ({ fullName, bookTitle, position }) => {
       margin-top: 30px;
       font-size: 14px;
       text-align: center;
-      color: #94a3b8;
-      border-top: 1px solid #334155;
-      padding-top: 20px;
+      color: #a1a1aa; /* zinc-400 muted text */
+      border-top: 1px solid #3f3f46; /* zinc-700 border */
+      padding-top: 18px;
     }
 
     @media screen and (max-width: 480px) {
       .container {
-        padding: 20px 15px;
+        padding: 24px 16px;
       }
 
       .heading {
@@ -82,10 +82,10 @@ exports.addQueueEmailTemplate = ({ fullName, bookTitle, position }) => {
 
     <div class="body">
       <p>Hi <strong>${fullName}</strong>,</p>
-      <p>You have been added to the queue for the book <span class="highlight">"${bookTitle}"</span>.</p>
-      <p>Your current queue position is: <span class="highlight">#${position}</span></p>
-      <p>We will notify you once the book becomes available for you to borrow.</p>
-      <p>Thank you for your patience!</p>
+      <p>You’ve been added to the queue for the book <span class="highlight">"${bookTitle}"</span>.</p>
+      <p>Your current queue position is: <span class="highlight">#${position}</span>.</p>
+      <p>We’ll notify you once it becomes available for borrowing.</p>
+      <p>Thanks for staying with BooksNest!</p>
     </div>
 
     <div class="footer">

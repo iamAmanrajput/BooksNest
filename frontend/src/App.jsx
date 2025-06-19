@@ -19,10 +19,10 @@ const App = () => {
           }
         />
         <Route path="/signup" element={<Signup />} />
-        <Route path="/login" element={<Login />} />
+        <Route path="/signin" element={<Login />} />
 
         {/* Admin Routes */}
-        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/admin/signin" element={<AdminLogin />} />
       </Routes>
     </div>
   );

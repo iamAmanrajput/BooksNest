@@ -11,18 +11,28 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Eye, EyeOff } from "lucide-react";
 import ModeToggle from "@/components/common/ModeToggle";
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
+import { toast } from "sonner";
+import { useDispatch } from "react-redux";
+import { setUserLogin } from "@/redux/slices/authSlice";
+import Loader from "@/components/common/Loader";
 
 const Login = () => {
-  const [form, setForm] = useState({
+  const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
+  const [loading, setLoading] = useState(false);
 
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
 
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
   const handleChange = (e) => {
-    setForm((prev) => ({
+    setFormData((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
     }));
@@ -34,19 +44,42 @@ const Login = () => {
 
   const validateForm = () => {
     const newErrors = {};
-    if (!form.email.trim()) newErrors.email = "Email is required.";
-    else if (!/\S+@\S+\.\S+/.test(form.email))
+    if (!formData.email.trim()) newErrors.email = "Email is required.";
+    else if (!/\S+@\S+\.\S+/.test(formData.email))
       newErrors.email = "Enter a valid email.";
-    if (!form.password.trim()) newErrors.password = "Password is required.";
+    if (!formData.password.trim()) newErrors.password = "Password is required.";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     if (!validateForm()) return;
-    console.log("Form Data:", form);
-    // Call API here
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/auth/login`,
+        formData,
+        {
+          withCredentials: true,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (response?.data?.success) {
+        toast.success(response?.data?.message || "User Sign In Successfully");
+        dispatch(setUserLogin(response?.data));
+        navigate("/");
+      } else {
+        return toast.error(response?.data?.message || "Internal Server Error");
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error(error?.response?.data?.message || "Internal Server Error");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -78,7 +111,7 @@ const Login = () => {
                 id="email"
                 name="email"
                 type="email"
-                value={form.email}
+                value={formData.email}
                 onChange={handleChange}
                 placeholder="Enter your email"
               />
@@ -95,7 +128,7 @@ const Login = () => {
                   id="password"
                   name="password"
                   type={showPassword ? "text" : "password"}
-                  value={form.password}
+                  value={formData.password}
                   onChange={handleChange}
                   placeholder="Enter your password"
                   className="pr-10"
@@ -118,30 +151,30 @@ const Login = () => {
 
             {/* Forgot Password */}
             <div className="text-right">
-              <a
-                href="/forgot-password"
+              <Link
+                to="/commingsoon"
                 className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
               >
                 Forgot Password?
-              </a>
+              </Link>
             </div>
           </CardContent>
 
           <CardFooter className="flex flex-col gap-2 mt-4">
             <Button type="submit" className="w-full">
-              Login
+              {loading === true ? <Loader /> : "Sign In"}
             </Button>
             <p className="text-xs text-center text-muted-foreground">
               Don't have an account?{" "}
-              <a href="/signup" className="underline">
+              <Link to="/signup" className="underline">
                 Sign Up
-              </a>
+              </Link>
             </p>
             <p className="text-xs text-center text-muted-foreground">
               Want to login as admin?{" "}
-              <a href="/admin-login" className="underline">
+              <Link to="/admin/signin" className="underline">
                 Click here
-              </a>
+              </Link>
             </p>
           </CardFooter>
         </form>

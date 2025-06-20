@@ -1,4 +1,4 @@
-exports.addQueueEmailTemplate = ({ fullName, bookTitle, position }) => {
+exports.addQueueEmailTemplate = (fullName, bookTitle, position) => {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>

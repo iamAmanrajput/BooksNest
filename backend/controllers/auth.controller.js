@@ -122,6 +122,7 @@ module.exports.login = async (req, res) => {
         role: user.role,
         gender: user.gender,
         profilePic: user.profilePic.imageUrl,
+        fineAmount: user.fineAmount,
       },
     });
   } catch (error) {

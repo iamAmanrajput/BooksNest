@@ -12,12 +12,13 @@ const { isLoggedIn, isAdmin } = require("../middlewares/verifyToken");
 
 router.get("/send/borrowRequest/:bookId", isLoggedIn, sendBorrowRequest);
 router.get("/send/returnRequest/:requestId", isLoggedIn, sendReturnRequest);
-router.patch("/send/renewRequest/:requestId", isLoggedIn, renewBook)
+router.patch("/send/renewRequest/:requestId", isLoggedIn, renewBook);
 
 // Admin Only
 router.patch(
   "/handle/borrowRequest/:requestId",
   isLoggedIn,
+  isAdmin,
   handleBorrowRequest
 );
 router.patch(

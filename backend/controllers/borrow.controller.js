@@ -16,6 +16,7 @@ exports.sendBorrowRequest = async (req, res) => {
   try {
     const userId = req.user._id;
     const bookId = req.params.bookId;
+
     const existing = await BorrowRecord.findOne({
       userId,
       bookId,
@@ -26,6 +27,7 @@ exports.sendBorrowRequest = async (req, res) => {
         .status(400)
         .json({ success: false, message: "Request already sent" });
     }
+
     const alreadyIssued = await BorrowRecord.findOne({
       userId,
       bookId,
@@ -34,12 +36,26 @@ exports.sendBorrowRequest = async (req, res) => {
     if (alreadyIssued) {
       return res
         .status(400)
-        .json({ success: false, message: "Book already Issued" });
+        .json({ success: false, message: "Book already issued" });
     }
+
+    const alreadyQueued = await BorrowRecord.findOne({
+      userId,
+      bookId,
+      status: "queued",
+    });
+    if (alreadyQueued) {
+      return res.status(400).json({
+        success: false,
+        message: "You are already in the queue for this book.",
+      });
+    }
+
     const request = await BorrowRecord.create({ userId, bookId });
+
     return res.status(201).json({
       success: true,
-      message: "Request Sent to admin, Please wait for approvel",
+      message: "Request sent to admin, please wait for approval.",
     });
   } catch (error) {
     console.error("Error in sendBorrowRequest:", error);
@@ -53,21 +69,22 @@ exports.sendBorrowRequest = async (req, res) => {
 // handle Borrow Request -- Admin
 exports.handleBorrowRequest = async (req, res) => {
   try {
-    const { requestId } = req.params; // id of borrowRecord Document
+    const { requestId } = req.params;
     const { action } = req.body;
+
     const record = await BorrowRecord.findById(requestId).populate(
-      "bookId userId"
+      "userId bookId"
     );
+
     if (!record || record.status !== "pending") {
       return res
         .status(404)
         .json({ success: false, message: "Invalid request." });
     }
 
-    // get book info
-    const book = await Book.findById(record.bookId._id);
+    const book = record.bookId;
 
-    // If action was rejected
+    // Rejection logic
     if (action === "rejected") {
       record.status = "rejected";
       await record.save();
@@ -79,7 +96,7 @@ exports.handleBorrowRequest = async (req, res) => {
         message: `Your borrow request for '${book.title}' was rejected.`,
       });
 
-      const emailResponse = await mailSender(
+      await mailSender(
         record.userId.email,
         `Borrow request for '${book.title}' was rejected.`,
         commonEmailTemplate(
@@ -90,73 +107,79 @@ exports.handleBorrowRequest = async (req, res) => {
       return res.json({ success: true, message: "Request rejected." });
     }
 
-    // check available quantity and assign
+    // Issue book if available
     if (book.availableQuantity > 0) {
       record.status = "issued";
       record.issueDate = new Date();
-      record.dueDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
-
+      record.dueDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
       book.availableQuantity--;
-      await record.save();
-      await book.save();
 
-      await Notification.create({
-        user: record.userId._id,
-        type: "request_approved",
-        title: "Book Issued",
-        message: `Your request for ${book.title} has been accepted and issued.`,
-      });
+      await Promise.all([
+        record.save(),
+        book.save(),
+        Notification.create({
+          user: record.userId._id,
+          type: "request_approved",
+          title: "Book Issued",
+          message: `Your request for ${book.title} has been accepted and issued.`,
+        }),
+        User.findByIdAndUpdate(record.userId._id, {
+          $push: { borrowedRecords: record._id },
+        }),
+      ]);
 
-      const emailResponse = await mailSender(
+      mailSender(
         record.userId.email,
-        `🎉 You’ve been assigned the book: "${book.title}`,
+        `🎉 You’ve been assigned the book: "${book.title}"`,
         commonEmailTemplate(
           `Your request for ${book.title} has been accepted and issued.`
         )
-      );
+      ).catch((err) => console.error("Email sending failed:", err));
 
-      await User.findByIdAndUpdate(record.userId._id, {
-        $push: { borrowedRecords: record._id },
-      });
       return res.status(200).json({ success: true, message: "Book issued." });
-    } else {
-      // if book is not availabe sent user to the queue
-      // Add to queue
-      let queue = await BookQueue.findOne({ book: book._id });
-      if (!queue) {
-        queue = await BookQueue.create({ book: book._id, queue: [] });
-      }
-
-      const alreadyInQueue = queue.queue.find(
-        (item) => item.user.toString() === record.userId._id.toString()
-      );
-
-      if (!alreadyInQueue) {
-        const position = queue.queue.length + 1;
-        queue.queue.push({
-          user: record.userId._id,
-          position,
-        });
-        await queue.save();
-      }
-
-      await Notification.create({
-        user: record.userId._id,
-        type: "queue_notification",
-        title: "Added to Queue",
-        message: `You’ve been added to the queue for ${book.title}. Your position is ${position}.`,
-      });
-
-      await mailSender(
-        record.userId.email,
-        `You are added in the Queue`,
-        addQueueEmailTemplate(record.userId.fullName, book.title, position)
-      );
-
-      return res
-        .status(200)
-        .json({ success: true, message: "Added to queue." });
     }
+
+    // Add to queue if not available
+    let queue = await BookQueue.findOne({ book: book._id });
+    if (!queue) {
+      queue = await BookQueue.create({ book: book._id, queue: [] });
+    }
+
+    let userPosition;
+    const alreadyInQueue = queue.queue.find(
+      (item) => item.user.toString() === record.userId._id.toString()
+    );
+
+    if (!alreadyInQueue) {
+      userPosition = queue.queue.length + 1;
+      queue.queue.push({ user: record.userId._id, position: userPosition });
+      await queue.save();
+
+      record.status = "queued";
+      await record.save();
+    } else {
+      userPosition = alreadyInQueue.position;
+    }
+
+    // Safe values with fallbacks
+    const userName = record?.userId?.fullName || "User";
+    const bookTitle = book?.title || "Book";
+    const queuePosition = userPosition || "N/A";
+
+    await Notification.create({
+      user: record.userId._id,
+      type: "queue_notification",
+      title: "Added to Queue",
+      message: `You’ve been added to the queue for ${bookTitle}. Your position is ${queuePosition}.`,
+    });
+
+    await mailSender(
+      record.userId.email,
+      `You are added in the Queue`,
+      addQueueEmailTemplate(userName, bookTitle, queuePosition)
+    ).catch((err) => console.error("Queue Email Error:", err));
+
+    return res.status(200).json({ success: true, message: "Added to queue." });
   } catch (error) {
     console.error("Error in handleBorrowRequest:", error);
     return res.status(500).json({
@@ -329,8 +352,9 @@ exports.renewBook = async (req, res) => {
   try {
     const { requestId } = req.params;
 
-    const record = await BorrowRecord.findById(requestId)
-      .populate("userId bookId");
+    const record = await BorrowRecord.findById(requestId).populate(
+      "userId bookId"
+    );
 
     if (!record) {
       return res.status(404).json({
@@ -411,7 +435,9 @@ exports.renewBook = async (req, res) => {
         record.userId.email,
         "Successfully Renewed the Book",
         commonEmailTemplate(
-          `Your book '${record.bookId.title}' has been renewed successfully. New due date is ${newDueDate.toDateString()}.`
+          `Your book '${
+            record.bookId.title
+          }' has been renewed successfully. New due date is ${newDueDate.toDateString()}.`
         )
       ),
     ]);
@@ -420,7 +446,6 @@ exports.renewBook = async (req, res) => {
       success: true,
       message: "Book renewed successfully",
     });
-
   } catch (error) {
     console.error("Renew Book Error:", error);
     return res.status(500).json({
@@ -429,4 +454,3 @@ exports.renewBook = async (req, res) => {
     });
   }
 };
-

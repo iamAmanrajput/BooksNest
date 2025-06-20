@@ -259,7 +259,6 @@ exports.handleReturnRequest = async (req, res) => {
     const book = await Book.findById(record.bookId);
     book.availableQuantity++;
 
-    // Send confirmation email & save record in parallel
     await Promise.all([
       record.save(),
       mailSender(
@@ -270,12 +269,11 @@ exports.handleReturnRequest = async (req, res) => {
           record.bookId.title,
           fine
         )
-      ),
+      ).catch((err) => console.error("Return confirmation mail failed", err)),
     ]);
 
     await book.save();
 
-    // If fine exists, notify and email in parallel
     if (fine > 0) {
       await Promise.all([
         User.findByIdAndUpdate(record.userId, {
@@ -291,35 +289,53 @@ exports.handleReturnRequest = async (req, res) => {
           record.userId.email,
           "Fine Alert: Please Clear Your Dues for Returned Book",
           fineAlertEmail(record.userId.fullName, record.bookId.title, fine)
-        ),
+        ).catch((err) => console.error("Fine alert mail failed", err)),
       ]);
     }
 
-    // Check queue
+    // Handle Queue
     const queue = await BookQueue.findOne({ book: book._id });
     if (queue && queue.queue.length > 0) {
       const nextUser = queue.queue.shift();
 
-      // Reassign correct positions
+      // Reset positions of remaining users
       queue.queue.forEach((entry, index) => {
         entry.position = index + 1;
       });
 
-      const newRecord = await BorrowRecord.create({
+      await queue.save();
+
+      // Try to find the queued BorrowRecord and update it
+      const queuedRecord = await BorrowRecord.findOne({
         userId: nextUser.user,
         bookId: book._id,
-        status: "issued",
-        issueDate: new Date(),
-        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        status: "queued",
       });
+
+      let issuedRecord;
+
+      if (queuedRecord) {
+        queuedRecord.status = "issued";
+        queuedRecord.issueDate = new Date();
+        queuedRecord.dueDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+        issuedRecord = await queuedRecord.save();
+      } else {
+        // fallback: create new record
+        issuedRecord = await BorrowRecord.create({
+          userId: nextUser.user,
+          bookId: book._id,
+          status: "issued",
+          issueDate: new Date(),
+          dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        });
+      }
 
       book.availableQuantity--;
 
       const user = await User.findById(nextUser.user);
-      user.borrowedRecords.push(newRecord._id);
+      user.borrowedRecords.push(issuedRecord._id);
 
       await Promise.all([
-        queue.save(),
         book.save(),
         user.save(),
         Notification.create({
@@ -334,16 +350,17 @@ exports.handleReturnRequest = async (req, res) => {
           commonEmailTemplate(
             `Hello ${user.fullName}, The book <b>${book.title}</b> is now available and has been issued to you.`
           )
-        ),
+        ).catch((err) => console.error("Queue mail failed", err)),
       ]);
     }
 
     return res.status(200).json({ success: true, message: "Return accepted." });
   } catch (error) {
-    console.error("Error in acceptReturn:", error);
-    return res
-      .status(500)
-      .json({ success: false, message: "Internal Server Error" });
+    console.error("Error in handleReturnRequest:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
   }
 };
 

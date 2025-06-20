@@ -24,6 +24,7 @@ router.patch(
 router.patch(
   "/handle/returnRequest/:requestId",
   isLoggedIn,
+  isAdmin,
   handleReturnRequest
 );
 

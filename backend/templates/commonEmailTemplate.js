@@ -37,7 +37,7 @@ exports.commonEmailTemplate = (message) => {
     .body {
       font-size: 16px;
       line-height: 1.6;
-      color: #e2e8f0;
+      color: #a1a1aa;
       text-align: center;
       margin-top: 10px;
     }

@@ -79,6 +79,28 @@ exports.createBook = async (req, res) => {
   }
 };
 
+// Get Book by Id
+exports.getBookbyId = async (req, res) => {
+  try {
+    const { bookId } = req.params;
+    const book = await Book.findById(bookId).populate("reviews");
+    if (!book) {
+      return res
+        .status(400)
+        .json({ success: false, message: "BookData not found", data: {} });
+    }
+    return res.status(200).json({
+      success: true,
+      message: "book fetched successfully",
+      data: book,
+    });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal Server Error" });
+  }
+};
+
 // update Book
 exports.updateBook = async (req, res) => {
   const { id: bookId } = req.params;

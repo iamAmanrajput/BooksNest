@@ -6,6 +6,8 @@ import Signup from "./pages/user/Signup";
 import Login from "./pages/user/Login";
 import AdminLogin from "./pages/admin/AdminLogin";
 import Book from "./pages/user/Book";
+import PageNotFound from "./components/common/PageNotFound";
+import FeatureComingSoon from "./components/common/FeatureComingSoon";
 
 const App = () => {
   return (
@@ -34,6 +36,8 @@ const App = () => {
 
         {/* Admin Routes */}
         <Route path="/admin/signin" element={<AdminLogin />} />
+        <Route path="/comingsoon" element={<FeatureComingSoon />} />
+        <Route path="*" element={<PageNotFound />} />
       </Routes>
     </div>
   );

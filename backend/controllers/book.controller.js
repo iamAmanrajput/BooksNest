@@ -83,7 +83,13 @@ exports.createBook = async (req, res) => {
 exports.getBookbyId = async (req, res) => {
   try {
     const { bookId } = req.params;
-    const book = await Book.findById(bookId).populate("reviews");
+    const book = await Book.findById(bookId).populate({
+      path: "reviews",
+      populate: {
+        path: "user",
+        select: "fullName profilePic",
+      },
+    });
     if (!book) {
       return res
         .status(400)

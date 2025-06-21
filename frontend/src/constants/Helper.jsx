@@ -23,3 +23,15 @@ export const starGenerator = (
     );
   });
 };
+
+export function formatDateTime(isoString) {
+  const dateObj = new Date(isoString);
+
+  const optionsDate = { day: "2-digit", month: "2-digit", year: "numeric" };
+  const optionsTime = { hour: "2-digit", minute: "2-digit", hour12: true };
+
+  const date = dateObj.toLocaleDateString("en-IN", optionsDate);
+  const time = dateObj.toLocaleTimeString("en-IN", optionsTime);
+
+  return { date, time };
+}

@@ -54,11 +54,17 @@ const HomePage = () => {
       setLoading((prev) => ({ ...prev, featuredBooks: true }));
 
       try {
-        const { data } = await axios.get(
+        const response = await axios.get(
           `${import.meta.env.VITE_BACKEND_URL}/book/featuredBook`,
-          { withCredentials: true }
+          {
+            withCredentials: true,
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+            },
+          }
         );
-        setFeaturedBooks(data.data);
+        console.log(response);
+        setFeaturedBooks(response?.data.data);
       } catch (error) {
         console.error("Error fetching featured books:", error);
       } finally {

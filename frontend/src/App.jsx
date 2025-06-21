@@ -24,7 +24,7 @@ const App = () => {
         />
 
         <Route
-          path="/book/:id"
+          path="/book/:bookId"
           element={
             <UserLayout>
               <Book />

@@ -8,10 +8,15 @@ import {
 } from "../ui/card";
 import { Button } from "../ui/button";
 import { Star } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const BookCard = ({ bookData }) => {
+  const navigate = useNavigate();
   return (
-    <Card className="w-full pt-0 max-w-sm md:max-w-md lg:max-w-lg shadow-white-xl border-none rounded-2xl overflow-hidden transition-transform hover:scale-[1.01] duration-300 bg-white dark:bg-zinc-900 cursor-pointer flex flex-col h-full">
+    <Card
+      onClick={() => navigate(`/book/${bookData?._id}`)}
+      className="w-full pt-0 max-w-sm md:max-w-md lg:max-w-lg shadow-white-xl border-none rounded-2xl overflow-hidden transition-transform hover:scale-[1.01] duration-300 bg-white dark:bg-zinc-900 cursor-pointer flex flex-col h-full"
+    >
       {/* Cover Image */}
       <img
         src={bookData?.coverImage?.imageUrl}

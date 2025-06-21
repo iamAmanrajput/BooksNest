@@ -10,10 +10,11 @@ const {
 const { isLoggedIn, isAdmin } = require("../middlewares/verifyToken");
 
 router.post("/createBook", isLoggedIn, createBook);
+
+router.get("/featuredBook", isLoggedIn, getFeaturedBooks);
+
 router.get("/:bookId", isLoggedIn, getBookbyId);
 
 router.patch("/updateBook/:id", isLoggedIn, isAdmin, updateBook);
-
-router.get("/featuredBook", getFeaturedBooks);
 
 module.exports = router;

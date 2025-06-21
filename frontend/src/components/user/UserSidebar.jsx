@@ -18,6 +18,7 @@ import {
   SidebarMenuItem,
   SidebarFooter,
 } from "@/components/ui/sidebar";
+import { useSelector } from "react-redux";
 
 // Menu items
 const items = [
@@ -31,6 +32,7 @@ const items = [
 
 const UserSidebar = () => {
   const { pathname } = useLocation();
+  const { user } = useSelector((state) => state.auth);
 
   return (
     <Sidebar>
@@ -65,7 +67,7 @@ const UserSidebar = () => {
       </SidebarContent>
 
       <SidebarFooter className="border-t border-b text-center p-4">
-        <h1 className="font-bold text-xl">Aman Kumar</h1>
+        <h1 className="font-bold text-xl capitalize">{user?.fullName}</h1>
       </SidebarFooter>
     </Sidebar>
   );

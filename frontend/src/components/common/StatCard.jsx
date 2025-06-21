@@ -1,5 +1,6 @@
 // components/StatCard.jsx
 import React from "react";
+import Spinner from "./Spinner";
 
 const colorStyles = {
   blue: {
@@ -41,7 +42,7 @@ const StatCard = ({ icon: Icon, title, value, color = "blue" }) => {
             {title}
           </p>
           <p className="text-2xl font-bold text-zinc-900 dark:text-customIsabelline">
-            {value}
+            {value != null ? value : <Spinner />}
           </p>
         </div>
       </div>

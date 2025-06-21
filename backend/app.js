@@ -39,6 +39,7 @@ app.use(
 // Routes
 app.use("/api/v1/auth", require("./routes/auth.routes"));
 app.use("/api/v1/review", require("./routes/review.routes"));
+app.use("/api/v1/profile", require("./routes/profile.routes"));
 
 // Admin - Routes
 app.use("/api/v1/book", require("./routes/book.routes"));

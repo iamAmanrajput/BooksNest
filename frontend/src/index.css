@@ -134,6 +134,21 @@
   scroll-behavior: smooth;
 }
 
+/* tailwind-scrollbar.css */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: rgba(100, 116, 139, 0.5); /* zinc-500 */
+  border-radius: 9999px;
+}
+
+.dark .scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.3); /* light thumb for dark */
+}
+
 body {
   font-family: "Urbanist", sans-serif;
   font-optical-sizing: auto;

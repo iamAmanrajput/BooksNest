@@ -8,6 +8,7 @@ import AdminLogin from "./pages/admin/AdminLogin";
 import Book from "./pages/user/Book";
 import PageNotFound from "./components/common/PageNotFound";
 import FeatureComingSoon from "./components/common/FeatureComingSoon";
+import AllBooks from "./pages/user/AllBooks";
 
 const App = () => {
   return (
@@ -30,6 +31,15 @@ const App = () => {
           element={
             <UserLayout>
               <Book />
+            </UserLayout>
+          }
+        />
+
+        <Route
+          path="/books"
+          element={
+            <UserLayout>
+              <AllBooks />
             </UserLayout>
           }
         />

@@ -110,7 +110,7 @@ exports.getBookbyId = async (req, res) => {
 // Get Books
 exports.getBooks = async (req, res) => {
   try {
-    const search = (req.query.q || "").trim();
+    const search = (req.query.search || "").trim();
     const availability = req.query.availability;
     const selectedGenre = (req.query.genre || "").trim();
     const selectedLanguage = (req.query.language || "").trim();
@@ -137,9 +137,9 @@ exports.getBooks = async (req, res) => {
       query.language = selectedLanguage;
     }
 
-    if (availability === "available") {
+    if (availability === "Available") {
       query.availableQuantity = { $gt: 0 };
-    } else if (availability === "unavailable") {
+    } else if (availability === "Unavailable") {
       query.availableQuantity = 0;
     }
 
@@ -158,10 +158,13 @@ exports.getBooks = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      totalBooks,
-      currentPage: page,
-      totalPages: Math.ceil(totalBooks / limit),
-      books,
+      pagination: {
+        totalBooks,
+        currentPage: page,
+        totalPages: Math.ceil(totalBooks / limit),
+        pageSize: limit,
+      },
+      data: books,
     });
   } catch (error) {
     console.error("Error in getBooks:", error);

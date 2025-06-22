@@ -2,6 +2,69 @@ const mongoose = require("mongoose");
 const Review = require("./review.model");
 const mailSender = require("../utils/mailSender");
 
+// Allowed Genres Enum List
+const allowedGenres = [
+  // Fiction
+  "Fantasy",
+  "Science Fiction",
+  "Mystery",
+  "Thriller",
+  "Horror",
+  "Romance",
+  "Historical Fiction",
+  "Adventure",
+  "Drama",
+  "Dystopian",
+  "Young Adult",
+  "Children",
+  "Graphic Novel",
+  "Mythology",
+  "Satire",
+  "Short Stories",
+
+  // Non-Fiction
+  "Biography",
+  "Autobiography",
+  "Memoir",
+  "History",
+  "Science",
+  "Self-Help",
+  "Psychology",
+  "Philosophy",
+  "Religion",
+  "Politics",
+  "Business",
+  "Economics",
+  "Technology",
+  "Education",
+  "Travel",
+  "Health",
+  "Art",
+  "Photography",
+  "Law",
+  "Cooking",
+  "Parenting",
+  "Language",
+
+  // Academic
+  "Mathematics",
+  "Physics",
+  "Chemistry",
+  "Biology",
+  "Computer Science",
+  "Engineering",
+  "Medical",
+  "Environmental Studies",
+  "Sociology",
+  "Anthropology",
+  "Literature",
+  "Statistics",
+  "Civics",
+  "Geography",
+  "Accountancy",
+  "Commerce",
+];
+
 const bookSchema = new mongoose.Schema(
   {
     title: {
@@ -34,6 +97,7 @@ const bookSchema = new mongoose.Schema(
     genres: [
       {
         type: String,
+        enum: allowedGenres,
         required: true,
         trim: true,
       },
@@ -46,8 +110,8 @@ const bookSchema = new mongoose.Schema(
     ],
     language: {
       type: String,
-      default: "english",
-      trim: true,
+      default: "English",
+      enum: ["English", "Hindi", "French", "Spanish", "German"],
     },
     rating: {
       type: Number,
@@ -69,7 +133,6 @@ const bookSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Calculate the average rating of a book
 bookSchema.methods.calculateRating = async function () {
   const reviews = await Review.find({ book: this._id });
   if (reviews.length > 0) {

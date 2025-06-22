@@ -107,6 +107,71 @@ exports.getBookbyId = async (req, res) => {
   }
 };
 
+// Get Books
+exports.getBooks = async (req, res) => {
+  try {
+    const search = (req.query.q || "").trim();
+    const availability = req.query.availability;
+    const selectedGenre = (req.query.genre || "").trim();
+    const selectedLanguage = (req.query.language || "").trim();
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+
+    let query = {};
+
+    if (search) {
+      const regex = new RegExp(search, "i");
+      query.$or = [
+        { title: { $regex: regex } },
+        { description: { $regex: regex } },
+        { keywords: { $elemMatch: { $regex: regex } } },
+        { authors: { $elemMatch: { $regex: regex } } },
+      ];
+    }
+
+    if (selectedGenre) {
+      query.genres = { $in: [selectedGenre] };
+    }
+
+    if (selectedLanguage) {
+      query.language = selectedLanguage;
+    }
+
+    if (availability === "available") {
+      query.availableQuantity = { $gt: 0 };
+    } else if (availability === "unavailable") {
+      query.availableQuantity = 0;
+    }
+
+    const skip = (page - 1) * limit;
+
+    const [totalBooks, books] = await Promise.all([
+      Book.countDocuments(query),
+      Book.find(query)
+        .select(
+          "title description quantity availableQuantity authors genres keywords language rating coverImage"
+        )
+        .skip(skip)
+        .limit(limit)
+        .sort({ createdAt: -1 }),
+    ]);
+
+    res.status(200).json({
+      success: true,
+      totalBooks,
+      currentPage: page,
+      totalPages: Math.ceil(totalBooks / limit),
+      books,
+    });
+  } catch (error) {
+    console.error("Error in getBooks:", error);
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong while fetching books.",
+    });
+  }
+};
+
 // update Book
 exports.updateBook = async (req, res) => {
   const { id: bookId } = req.params;

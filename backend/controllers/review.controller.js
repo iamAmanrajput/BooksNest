@@ -41,7 +41,7 @@ exports.createReview = async (req, res) => {
       comment: comment.trim(),
     });
 
-    newReview.populate("user", "fullName");
+    await newReview.populate("user", "fullName");
 
     let book = await Book.findByIdAndUpdate(
       bookId,

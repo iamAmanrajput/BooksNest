@@ -12,6 +12,15 @@ import axios from "axios";
 import { BookX } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 const AllBooks = () => {
   const [search, setSearch] = useState("");
@@ -20,6 +29,70 @@ const AllBooks = () => {
   const [availability, setAvailability] = useState("");
   const [loading, setLoading] = useState(false);
   const [books, setBooks] = useState([]);
+  const [pagination, setPagination] = useState({
+    totalBooks: 0,
+    currentPage: 1,
+    totalPages: 1,
+    pageSize: 10,
+  });
+
+  // Step 1: Fetch books from API — reusable function
+  const fetchBooks = async (page = 1) => {
+    setLoading(true);
+    try {
+      const response = await axios.get(
+        `${
+          import.meta.env.VITE_BACKEND_URL
+        }/book/books?genre=${genre}&language=${language}&availability=${availability}&search=${search}&page=${page}&limit=${
+          pagination.pageSize
+        }`,
+        {
+          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+        }
+      );
+
+      if (response?.data?.success) {
+        setBooks(response?.data?.data);
+        setPagination(response?.data?.pagination);
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "An error occurred");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Step 2: Fetch books whenever filters/search change — always start from page 1
+  useEffect(() => {
+    fetchBooks(1);
+  }, [search, genre, language, availability]);
+
+  // get pagination range for pagination
+  const getPaginationRange = (currentPage, totalPages) => {
+    const range = [];
+
+    // Always show first page
+    if (currentPage > 2) {
+      range.push(1);
+      if (currentPage > 3) range.push("start-ellipsis");
+    }
+
+    // Always show current page
+    if (currentPage > 1) range.push(currentPage - 1);
+    range.push(currentPage);
+    if (currentPage < totalPages) range.push(currentPage + 1);
+
+    // Always show last page
+    if (currentPage < totalPages - 1) {
+      if (currentPage < totalPages - 2) range.push("end-ellipsis");
+      range.push(totalPages);
+    }
+
+    return range;
+  };
 
   const genreData = {
     trigger: "Genre",
@@ -96,45 +169,16 @@ const AllBooks = () => {
     items: ["Available", "Unavailable"],
   };
 
-  useEffect(() => {
-    const getFilteredBooks = async () => {
-      setLoading(true);
-      try {
-        const response = await axios.get(
-          `${
-            import.meta.env.VITE_BACKEND_URL
-          }/book/books?genre=${genre}&language=${language}&availability=${availability}&search=${search}`,
-          {
-            withCredentials: true,
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-            },
-          }
-        );
-        console.log(response);
-        if (response?.data?.success) {
-          setBooks(response?.data?.data);
-        }
-      } catch (error) {
-        toast.error(error.response?.data?.message || "An error occurred");
-      } finally {
-        setLoading(false);
-      }
-    };
-    getFilteredBooks();
-  }, [search, genre, language, availability]);
-
   return (
     <div className="w-full px-4 py-6 text-zinc-900 dark:text-zinc-100 bg-gray-100 dark:bg-[#09090B]">
-      {/* heading & Input Div */}
+      {/* Heading and Filters Section */}
       <div className="w-full bg-gray-50 dark:bg-zinc-900 shadow-sm rounded-2xl px-6 py-8 max-w-7xl mx-auto">
         <h1 className="text-zinc-900 dark:text-zinc-100 text-3xl sm:text-5xl font-extrabold text-center">
           Discover Books
         </h1>
 
-        {/* Input & Dropdown Section */}
+        {/* Filters & Search */}
         <div className="mt-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          {/* Dropdown Filters */}
           <div className="flex flex-col sm:flex-row w-full sm:w-[60%] gap-4">
             <Select onValueChange={(value) => setGenre(value)}>
               <SelectTrigger
@@ -209,10 +253,10 @@ const AllBooks = () => {
           </div>
         </div>
       </div>
-      {/* Card container */}
+
+      {/* Book Cards */}
       {loading ? (
         <div className="flex justify-center mx-auto my-10">
-          {" "}
           <Loader width={9} height={40} />
         </div>
       ) : (
@@ -220,11 +264,9 @@ const AllBooks = () => {
           {books.length === 0 ? (
             <div className="col-span-full w-full flex flex-col items-center justify-center text-center px-4 sm:px-6 py-16 rounded-2xl bg-white dark:bg-zinc-900 shadow-md">
               <BookX className="w-16 h-16 text-red-500 dark:text-red-400 mb-4" />
-
               <h2 className="text-2xl sm:text-3xl font-semibold text-zinc-800 dark:text-zinc-100">
                 No Books Found
               </h2>
-
               <p className="text-zinc-600 dark:text-zinc-400 mt-2 max-w-md">
                 We couldn't find any books matching your search. <br />
                 Try adjusting your filters or searching with different keywords.
@@ -235,6 +277,66 @@ const AllBooks = () => {
           )}
         </div>
       )}
+
+      {/* Pagination Section */}
+      <div className="flex justify-center items-center">
+        {pagination.totalBooks > pagination.pageSize && (
+          <Pagination>
+            <PaginationContent>
+              {/* Previous Button */}
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => {
+                    if (pagination.currentPage > 1) {
+                      fetchBooks(pagination.currentPage - 1); //  go to previous page
+                    }
+                  }}
+                  className={
+                    pagination.currentPage === 1
+                      ? "pointer-events-none opacity-50"
+                      : ""
+                  }
+                />
+              </PaginationItem>
+
+              {/* Smart Page Numbers with Ellipsis */}
+              {getPaginationRange(
+                pagination.currentPage,
+                pagination.totalPages
+              ).map((page, idx) => (
+                <PaginationItem key={idx}>
+                  {page === "start-ellipsis" || page === "end-ellipsis" ? (
+                    <PaginationEllipsis />
+                  ) : (
+                    <PaginationLink
+                      onClick={() => fetchBooks(page)} // fetch selected page
+                      isActive={pagination.currentPage === page}
+                    >
+                      {page}
+                    </PaginationLink>
+                  )}
+                </PaginationItem>
+              ))}
+
+              {/* Next Button */}
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => {
+                    if (pagination.currentPage < pagination.totalPages) {
+                      fetchBooks(pagination.currentPage + 1); //  go to next page
+                    }
+                  }}
+                  className={
+                    pagination.currentPage === pagination.totalPages
+                      ? "pointer-events-none opacity-50"
+                      : ""
+                  }
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        )}
+      </div>
     </div>
   );
 };

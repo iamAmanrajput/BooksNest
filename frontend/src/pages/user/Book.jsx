@@ -25,13 +25,16 @@ import { formatDateTime } from "@/constants/Helper";
 const Book = () => {
   const [isEditModelOpen, setIsEditModelOpen] = useState(false);
   const [formData, setFormData] = useState({ rating: 5, comment: "" });
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState({
+    fetchBookLoading: false,
+    writeReviewLoading: false,
+  });
   const [book, setBook] = useState(null);
   const { bookId } = useParams();
 
   useEffect(() => {
     const fetchBook = async () => {
-      setLoading(true);
+      setLoading((prev) => ({ ...prev, fetchBookLoading: true }));
       try {
         const response = await axios.get(
           `${import.meta.env.VITE_BACKEND_URL}/book/${bookId}`,
@@ -48,7 +51,7 @@ const Book = () => {
       } catch (error) {
         toast.error(error?.response?.data?.message || "Internal Server Error");
       } finally {
-        setLoading(false);
+        setLoading((prev) => ({ ...prev, fetchBookLoading: false }));
       }
     };
     fetchBook();
@@ -65,7 +68,36 @@ const Book = () => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  return loading ? (
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (formData.comment.trim() === "") {
+      toast.error("Review Cannot be empty");
+      return;
+    }
+    setLoading((prev) => ({ ...prev, writeReviewLoading: true }));
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/review/createReview/${bookId}`,
+        formData,
+        {
+          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+        }
+      );
+      if (response?.data?.success) {
+        book?.reviews?.unshift(response?.data?.data);
+        setIsEditModelOpen(false);
+      }
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Internal Server Error");
+    } finally {
+      setLoading((prev) => ({ ...prev, writeReviewLoading: false }));
+    }
+  };
+
+  return loading.fetchBookLoading ? (
     <div className="flex justify-center my-10">
       {" "}
       <Loader width={9} height={40} />
@@ -115,7 +147,7 @@ const Book = () => {
           <div className="flex items-center gap-2">
             <div className="flex">{starGenerator(book?.rating)}</div>
             <span className="text-xl font-semibold text-zinc-700 dark:text-zinc-300">
-              {book?.rating}
+              {book?.rating?.toFixed(1)}
             </span>
           </div>
 
@@ -202,7 +234,7 @@ const Book = () => {
                 Share your thoughts about this book with other users.
               </DialogDescription>
             </DialogHeader>
-            <form>
+            <form onSubmit={handleSubmit}>
               <div className="grid gap-3 py-4">
                 <div className="grid gap-4 items-center">
                   <Label htmlFor="rating" className="font-bold">
@@ -233,7 +265,9 @@ const Book = () => {
                 </div>
               </div>
               <DialogFooter>
-                <Button type="submit">Submit Review</Button>
+                <Button type="submit">
+                  {loading.writeReviewLoading ? <Loader /> : "Submit Review"}
+                </Button>
               </DialogFooter>
             </form>
           </DialogContent>
@@ -247,6 +281,7 @@ const Book = () => {
                 key={review?._id}
                 className="border-l-4 border-l-blue-500 bg-white dark:bg-zinc-900 text-slate-900 dark:text-slate-200"
               >
+                {console.log(review)}
                 <CardContent className="pt-5 pb-4">
                   <div className="flex flex-col sm:flex-row items-start gap-4">
                     {/* Avatar */}

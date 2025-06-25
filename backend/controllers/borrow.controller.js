@@ -471,3 +471,63 @@ exports.renewBook = async (req, res) => {
     });
   }
 };
+
+// get BorrowHistory
+exports.getBorrowHistory = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const status = req.query.status || "";
+
+    const skip = (page - 1) * limit;
+
+    let query = { userId };
+
+    // Overdue logic
+    if (status === "overdue") {
+      query.status = "issued";
+      query.dueDate = { $lt: new Date() };
+    } else if (status) {
+      query.status = status;
+    }
+
+    const [totalRecord, borrowRecords] = await Promise.all([
+      BorrowRecord.countDocuments(query),
+      BorrowRecord.find(query)
+        .populate({ path: "bookId", select: "title authors" })
+        .skip(skip)
+        .limit(limit)
+        .sort({ issueDate: -1 }),
+    ]);
+
+    // Add Queue Position in actual Documnt
+    for (let i = 0; i < borrowRecords.length; i++) {
+      const record = borrowRecords[i];
+      if (record.status === "queued") {
+        const bookQueue = await BookQueue.findOne({ book: record.bookId });
+        const userEntry = bookQueue?.queue.find(
+          (q) => q.user.toString() === userId.toString()
+        );
+        record._doc.queuePosition = userEntry?.position || null;
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: borrowRecords,
+      pagination: {
+        totalRecord,
+        currentPage: page,
+        totalPages: Math.ceil(totalRecord / limit),
+        pageSize: limit,
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch borrow history",
+      error: error.message,
+    });
+  }
+};

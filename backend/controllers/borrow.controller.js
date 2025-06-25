@@ -473,6 +473,7 @@ exports.renewBook = async (req, res) => {
 };
 
 // get BorrowHistory
+const PER_DAY_FINE = 5;
 exports.getBorrowHistory = async (req, res) => {
   try {
     const userId = req.user._id;
@@ -495,21 +496,36 @@ exports.getBorrowHistory = async (req, res) => {
     const [totalRecord, borrowRecords] = await Promise.all([
       BorrowRecord.countDocuments(query),
       BorrowRecord.find(query)
-        .populate({ path: "bookId", select: "title authors" })
+        .populate({ path: "bookId", select: "title authors coverImage" })
         .skip(skip)
         .limit(limit)
         .sort({ issueDate: -1 }),
     ]);
 
-    // Add Queue Position in actual Documnt
+    // Add Queue Position & Fine Calculation
     for (let i = 0; i < borrowRecords.length; i++) {
       const record = borrowRecords[i];
+
+      // Queue Position
       if (record.status === "queued") {
         const bookQueue = await BookQueue.findOne({ book: record.bookId });
         const userEntry = bookQueue?.queue.find(
           (q) => q.user.toString() === userId.toString()
         );
         record._doc.queuePosition = userEntry?.position || null;
+      }
+
+      // Fine Calculation for overdue
+      if (
+        record.status === "issued" &&
+        record.dueDate &&
+        record.dueDate < new Date()
+      ) {
+        const overdueDays = Math.floor(
+          (new Date() - new Date(record.dueDate)) / (1000 * 60 * 60 * 24)
+        );
+        const calculatedFine = overdueDays * PER_DAY_FINE;
+        record._doc.fine = calculatedFine;
       }
     }
 

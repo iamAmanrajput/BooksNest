@@ -77,7 +77,7 @@ const BookCard = ({ bookData }) => {
           )}
         </CardContent>
 
-        <CardFooter className="flex w-full flex-wrap justify-between items-center gap-4 mt-auto">
+        <CardFooter className="flex w-full flex-wrap justify-between items-center gap-3 mt-auto">
           {/* Explore Button */}
           <Button variant="default" className="rounded-full px-6 order-1">
             Explore Now
@@ -87,7 +87,7 @@ const BookCard = ({ bookData }) => {
           <div className="order-2 flex items-center gap-1 text-yellow-500 mx-auto">
             <Star className="w-4 h-4 fill-yellow-500" />
             <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-              {bookData?.rating}
+              {bookData?.rating.toFixed(1)}
             </span>
           </div>
 

@@ -1,12 +1,5 @@
-import {
-  BookOpen,
-  CornerDownLeft,
-  Heart,
-  History,
-  Home,
-  User,
-} from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
+import { BookOpen, History, Home, User } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import {
   Sidebar,
@@ -25,20 +18,25 @@ const items = [
   { title: "Dashboard", url: "/", icon: Home },
   { title: "Browse Books", url: "/books", icon: BookOpen },
   { title: "My History", url: "/history", icon: History },
-  { title: "Return Books", url: "/return/book", icon: CornerDownLeft },
-  { title: "Whislist", url: "/whislist", icon: Heart },
+  // { title: "Whislist", url: "/whislist", icon: Heart },
   { title: "My Profile", url: "/profile", icon: User },
 ];
 
 const UserSidebar = () => {
   const { pathname } = useLocation();
   const { user } = useSelector((state) => state.auth);
+  const navigate = useNavigate();
 
   return (
     <Sidebar>
       <SidebarHeader className="flex flex-row items-center gap-3 mt-4 mb-4 pl-4">
         <BookOpen className="text-customblue" />
-        <h3 className="text-xl font-bold">BooksNest</h3>
+        <h3
+          onClick={() => navigate("/")}
+          className="text-xl font-bold cursor-pointer"
+        >
+          BooksNest
+        </h3>
       </SidebarHeader>
 
       <SidebarContent>

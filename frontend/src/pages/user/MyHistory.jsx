@@ -6,6 +6,7 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
+  PaginationEllipsis,
 } from "@/components/ui/pagination";
 import {
   Select,
@@ -24,11 +25,13 @@ import { toast } from "sonner";
 const MyHistory = () => {
   const [borrowRecord, setBorrowRecord] = useState([]);
   const [status, setStatus] = useState("all");
+
   const [loading, setLoading] = useState({
     fetchBorrowRecordLoading: false,
     renewBookLoading: false,
     returnBookLoading: false,
   });
+
   const [pagination, setPagination] = useState({
     totalRecord: 0,
     currentPage: 1,
@@ -36,9 +39,11 @@ const MyHistory = () => {
     pageSize: 10,
   });
 
+  // Fetch records based on page and status
   const fetchBorrowRecord = async (page = 1) => {
     setLoading((prev) => ({ ...prev, fetchBorrowRecordLoading: true }));
     const statusToSend = status === "all" ? "" : status;
+
     try {
       const response = await axios.get(
         `${
@@ -56,10 +61,15 @@ const MyHistory = () => {
 
       if (response?.data?.success) {
         setBorrowRecord(response?.data?.data);
-        setPagination(response?.data?.pagination);
+
+        setPagination((prev) => ({
+          ...prev,
+          ...response.data.pagination,
+          currentPage: page,
+        }));
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || "An error occurred");
+      toast.error(error?.response?.data?.message || "An error occurred");
     } finally {
       setLoading((prev) => ({ ...prev, fetchBorrowRecordLoading: false }));
     }
@@ -69,22 +79,19 @@ const MyHistory = () => {
     fetchBorrowRecord(1);
   }, [status]);
 
-  // get pagination range for pagination
+  // Generate page numbers with ellipsis
   const getPaginationRange = (currentPage, totalPages) => {
     const range = [];
 
-    // Always show first page
     if (currentPage > 2) {
       range.push(1);
       if (currentPage > 3) range.push("start-ellipsis");
     }
 
-    // Always show current page
     if (currentPage > 1) range.push(currentPage - 1);
     range.push(currentPage);
     if (currentPage < totalPages) range.push(currentPage + 1);
 
-    // Always show last page
     if (currentPage < totalPages - 1) {
       if (currentPage < totalPages - 2) range.push("end-ellipsis");
       range.push(totalPages);
@@ -93,8 +100,10 @@ const MyHistory = () => {
     return range;
   };
 
+  // Handle return request
   const handleReturn = async (id) => {
     setLoading((prev) => ({ ...prev, returnBookLoading: true }));
+
     try {
       const response = await axios.get(
         `${import.meta.env.VITE_BACKEND_URL}/borrow/send/returnRequest/${id}`,
@@ -105,10 +114,9 @@ const MyHistory = () => {
           },
         }
       );
+
       if (response?.data?.success) {
-        toast.success(
-          response?.data?.message || "Return request sent to admin"
-        );
+        toast.success(response?.data?.message || "Return request sent");
         setBorrowRecord((prev) =>
           prev.map((record) =>
             record._id === id
@@ -127,8 +135,10 @@ const MyHistory = () => {
     }
   };
 
+  // Handle renew request
   const handleRenew = async (id) => {
     setLoading((prev) => ({ ...prev, renewBookLoading: true }));
+
     try {
       const response = await axios.get(
         `${import.meta.env.VITE_BACKEND_URL}/borrow/send/renewRequest/${id}`,
@@ -139,9 +149,10 @@ const MyHistory = () => {
           },
         }
       );
+
       if (response?.data?.success) {
-        toast.success(response?.data?.message || "Renew request sent to admin");
-        fetchBorrowRecord(pagination.currentPage);
+        toast.success(response?.data?.message || "Renew request sent");
+        fetchBorrowRecord(pagination.currentPage); // Refresh current page
       }
     } catch (error) {
       toast.error(
@@ -155,18 +166,17 @@ const MyHistory = () => {
 
   return (
     <div className="w-full px-4 py-6 text-zinc-900 dark:text-zinc-100 bg-gray-100 dark:bg-[#09090B]">
-      {/* Heading and Filters Section */}
+      {/* Header and Filter */}
       <div className="w-full bg-gray-50 dark:bg-zinc-900 shadow-sm rounded-2xl px-6 py-8 max-w-7xl mx-auto">
-        <h1 className="text-zinc-900 dark:text-zinc-100 text-3xl sm:text-5xl font-extrabold text-center">
+        <h1 className="text-3xl sm:text-5xl font-extrabold text-center">
           My History
         </h1>
         <p className="text-customGray text-xs font-bold text-center pt-2">
           Track your book transactions and manage returns
         </p>
 
-        {/* Filters & Search */}
+        {/* Status Filter */}
         <div className="mt-10 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6 sm:gap-8">
-          {/* title container for filter */}
           <div className="w-full sm:w-1/2">
             <h1 className="text-xl font-bold">Status Filter</h1>
             <p className="text-sm font-semibold text-muted-foreground pt-1">
@@ -174,7 +184,6 @@ const MyHistory = () => {
             </p>
           </div>
 
-          {/* filter container */}
           <div className="w-full sm:pt-1 sm:w-1/2">
             <Select onValueChange={(value) => setStatus(value)}>
               <SelectTrigger
@@ -184,51 +193,30 @@ const MyHistory = () => {
                 <SelectValue placeholder="Select Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem className="capitalize cursor-pointer" value="all">
-                  All
-                </SelectItem>
-                <SelectItem
-                  value="pending"
-                  className="capitalize cursor-pointer"
-                >
-                  Pending
-                </SelectItem>
-                <SelectItem
-                  value="issued"
-                  className="capitalize cursor-pointer"
-                >
-                  Issued
-                </SelectItem>
-                <SelectItem
-                  value="returned"
-                  className="capitalize cursor-pointer"
-                >
-                  Returned
-                </SelectItem>
-                <SelectItem
-                  value="return_requested"
-                  className="capitalize cursor-pointer"
-                >
-                  Return Requested
-                </SelectItem>
-                <SelectItem
-                  value="rejected"
-                  className="capitalize cursor-pointer"
-                >
-                  Rejected
-                </SelectItem>
-                <SelectItem
-                  value="queued"
-                  className="capitalize cursor-pointer"
-                >
-                  Queued
-                </SelectItem>
+                {[
+                  "all",
+                  "pending",
+                  "issued",
+                  "returned",
+                  "return_requested",
+                  "rejected",
+                  "queued",
+                ].map((stat) => (
+                  <SelectItem
+                    key={stat}
+                    value={stat}
+                    className="capitalize cursor-pointer"
+                  >
+                    {stat.replace("_", " ")}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
         </div>
       </div>
-      {/* BorrowRecord Cards Container */}
+
+      {/* Main Content: Borrow Records */}
       {loading.fetchBorrowRecordLoading ? (
         <div className="flex justify-center mx-auto my-10">
           <Loader width={9} height={40} />
@@ -236,85 +224,81 @@ const MyHistory = () => {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 mt-6 mb-6">
           {borrowRecord?.length === 0 ? (
-            <div className="col-span-full w-full flex flex-col items-center justify-center text-center px-4 sm:px-6 py-16 rounded-2xl bg-white dark:bg-zinc-900 shadow-md">
+            <div className="col-span-full flex flex-col items-center justify-center text-center px-4 sm:px-6 py-16 rounded-2xl bg-white dark:bg-zinc-900 shadow-md">
               <FileQuestion className="w-16 h-16 text-red-500 dark:text-red-400 mb-4" />
-              <h2 className="text-2xl sm:text-3xl font-semibold text-zinc-800 dark:text-zinc-100">
+              <h2 className="text-2xl sm:text-3xl font-semibold">
                 No Records Available
               </h2>
               <p className="text-zinc-600 dark:text-zinc-400 mt-2 max-w-md">
-                You currently have no history in this status. <br />
-                Try changing the status filter above to view other records.
+                You currently have no history in this status. Try changing the
+                filter above.
               </p>
             </div>
           ) : (
-            borrowRecord?.map((record) => (
+            borrowRecord.map((record) => (
               <BorrowRecordCard
-                key={record?._id}
-                _id={record?._id}
+                key={record._id}
+                _id={record._id}
                 title={record?.bookId?.title}
                 coverImage={record?.bookId?.coverImage?.imageUrl}
-                author={record?.bookId?.authors[0] || "Unknown"}
-                status={record?.status}
+                author={record?.bookId?.authors?.[0] || "Unknown"}
+                status={record.status}
                 issueDate={
-                  record?.issueDate
-                    ? formatDateTime(record?.issueDate).date
-                    : ""
+                  record.issueDate ? formatDateTime(record.issueDate).date : ""
                 }
                 returnDate={
-                  record?.returnDate
-                    ? formatDateTime(record?.returnDate).date
+                  record.returnDate
+                    ? formatDateTime(record.returnDate).date
                     : ""
                 }
                 dueDate={
-                  record?.dueDate ? formatDateTime(record?.dueDate).date : ""
+                  record.dueDate ? formatDateTime(record.dueDate).date : ""
                 }
-                fineAmount={record?.fineAmount}
-                queuePosition={
-                  record?.queuePosition ? record?.queuePosition : null
-                }
+                fineAmount={record.fineAmount}
+                queuePosition={record.queuePosition || null}
                 onRenew={handleRenew}
+                onReturn={handleReturn}
                 renewBookLoading={loading.renewBookLoading}
                 returnBookLoading={loading.returnBookLoading}
-                onReturn={handleReturn}
               />
             ))
           )}
         </div>
       )}
 
-      {/* Pagination Section */}
-      <div className="flex justify-center items-center">
-        {pagination?.totalRecord > pagination?.pageSize && (
+      {/* Pagination */}
+      {pagination.totalRecord > pagination.pageSize && (
+        <div className="flex justify-center items-center mt-6">
           <Pagination>
             <PaginationContent>
-              {/* Previous Button */}
+              {/* Previous */}
               <PaginationItem>
                 <PaginationPrevious
                   onClick={() => {
-                    if (pagination?.currentPage > 1) {
-                      fetchBorrowRecord(pagination?.currentPage - 1); //  go to previous page
+                    if (pagination.currentPage > 1) {
+                      fetchBorrowRecord(pagination.currentPage - 1);
                     }
                   }}
                   className={
-                    pagination?.currentPage === 1
+                    pagination.currentPage === 1
                       ? "pointer-events-none opacity-50"
                       : ""
                   }
                 />
               </PaginationItem>
 
-              {/* Smart Page Numbers with Ellipsis */}
+              {/* Pages */}
               {getPaginationRange(
-                pagination?.currentPage,
-                pagination?.totalPages
+                pagination.currentPage,
+                pagination.totalPages
               ).map((page, idx) => (
                 <PaginationItem key={idx}>
                   {page === "start-ellipsis" || page === "end-ellipsis" ? (
                     <PaginationEllipsis />
                   ) : (
                     <PaginationLink
-                      onClick={() => fetchBorrowRecord(page)} // fetch selected page
-                      isActive={pagination?.currentPage === page}
+                      onClick={() => fetchBorrowRecord(page)}
+                      isActive={pagination.currentPage === page}
                     >
                       {page}
                     </PaginationLink>
@@ -322,16 +306,16 @@ const MyHistory = () => {
                 </PaginationItem>
               ))}
 
-              {/* Next Button */}
+              {/* Next */}
               <PaginationItem>
                 <PaginationNext
                   onClick={() => {
-                    if (pagination?.currentPage < pagination?.totalPages) {
-                      fetchBorrowRecord(pagination?.currentPage + 1); //  go to next page
+                    if (pagination.currentPage < pagination.totalPages) {
+                      fetchBorrowRecord(pagination.currentPage + 1);
                     }
                   }}
                   className={
-                    pagination?.currentPage === pagination?.totalPages
+                    pagination.currentPage === pagination.totalPages
                       ? "pointer-events-none opacity-50"
                       : ""
                   }
@@ -339,8 +323,8 @@ const MyHistory = () => {
               </PaginationItem>
             </PaginationContent>
           </Pagination>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

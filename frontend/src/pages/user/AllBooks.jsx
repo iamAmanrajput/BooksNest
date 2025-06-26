@@ -36,7 +36,7 @@ const AllBooks = () => {
     pageSize: 10,
   });
 
-  // Step 1: Fetch books from API — reusable function
+  // Fetch books from API
   const fetchBooks = async (page = 1) => {
     setLoading(true);
     try {
@@ -56,7 +56,11 @@ const AllBooks = () => {
 
       if (response?.data?.success) {
         setBooks(response?.data?.data);
-        setPagination(response?.data?.pagination);
+        setPagination((prev) => ({
+          ...prev,
+          ...response.data.pagination,
+          currentPage: page,
+        }));
       }
     } catch (error) {
       toast.error(error.response?.data?.message || "An error occurred");
@@ -65,7 +69,7 @@ const AllBooks = () => {
     }
   };
 
-  // Step 2: Fetch books whenever filters/search change — always start from page 1
+  //  Fetch books — always start from page 1
   useEffect(() => {
     fetchBooks(1);
   }, [search, genre, language, availability]);

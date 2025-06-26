@@ -17,6 +17,14 @@ exports.sendBorrowRequest = async (req, res) => {
     const userId = req.user._id;
     const bookId = req.params.bookId;
 
+    const bookExists = await Book.findById(bookId);
+    if (!bookExists) {
+      return res.status(404).json({
+        success: false,
+        message: "Book not found.",
+      });
+    }
+
     const existing = await BorrowRecord.findOne({
       userId,
       bookId,
@@ -37,6 +45,19 @@ exports.sendBorrowRequest = async (req, res) => {
       return res
         .status(400)
         .json({ success: false, message: "Book already issued" });
+    }
+
+    const pendingReturn = await BorrowRecord.findOne({
+      userId,
+      bookId,
+      status: "return_requested",
+    });
+    if (pendingReturn) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "You’ve already requested a return for this book. Please wait until it's approved before making another request.",
+      });
     }
 
     const alreadyQueued = await BorrowRecord.findOne({
@@ -93,7 +114,7 @@ exports.handleBorrowRequest = async (req, res) => {
         user: record.userId._id,
         type: "request_rejected",
         title: "Request Rejected",
-        message: `Your borrow request for '${book.title}' was rejected.`,
+        message: `Unfortunately, your borrow request for '${book.title}' has been rejected.`,
       });
 
       await mailSender(
@@ -121,7 +142,7 @@ exports.handleBorrowRequest = async (req, res) => {
           user: record.userId._id,
           type: "request_approved",
           title: "Book Issued",
-          message: `Your request for ${book.title} has been accepted and issued.`,
+          message: `Good news! Your request for '${book.title}' has been approved, and the book has been issued to you.`,
         }),
         User.findByIdAndUpdate(record.userId._id, {
           $push: { borrowedRecords: record._id },
@@ -130,7 +151,7 @@ exports.handleBorrowRequest = async (req, res) => {
 
       mailSender(
         record.userId.email,
-        `🎉 You’ve been assigned the book: "${book.title}"`,
+        `🎉 Great news! You've been issued the book: "${book.title}"`,
         commonEmailTemplate(
           `Your request for ${book.title} has been accepted and issued.`
         )
@@ -170,12 +191,12 @@ exports.handleBorrowRequest = async (req, res) => {
       user: record.userId._id,
       type: "queue_notification",
       title: "Added to Queue",
-      message: `You’ve been added to the queue for ${bookTitle}. Your position is ${queuePosition}.`,
+      message: `You've been added to the waitlist for '${bookTitle}'. Your current position in the queue is ${queuePosition}.`,
     });
 
     await mailSender(
       record.userId.email,
-      `You are added in the Queue`,
+      "You've been added to the book queue",
       addQueueEmailTemplate(userName, bookTitle, queuePosition)
     ).catch((err) => console.error("Queue Email Error:", err));
 
@@ -196,28 +217,33 @@ exports.sendReturnRequest = async (req, res) => {
     const record = await BorrowRecord.findById(requestId);
 
     if (!record) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Borrow record not found." });
+      return res.status(404).json({
+        success: false,
+        message: "We couldn't find a valid borrow record for this request.",
+      });
     }
 
     if (record.status === "return_requested") {
-      return res
-        .status(400)
-        .json({ success: false, message: "Return request already sent." });
+      return res.status(400).json({
+        success: false,
+        message:
+          "You’ve already submitted a return request for this book. Please wait for admin approval.",
+      });
     }
 
     if (["returned", "rejected"].includes(record.status)) {
       return res.status(400).json({
         success: false,
-        message: "Book already returned or request was rejected.",
+        message:
+          "This book has already been returned or the request was rejected earlier.",
       });
     }
 
     if (record.status !== "issued") {
       return res.status(400).json({
         success: false,
-        message: "Cannot request return for this record.",
+        message:
+          "You cannot request a return for this record in its current status.",
       });
     }
 
@@ -226,7 +252,7 @@ exports.sendReturnRequest = async (req, res) => {
 
     res.json({ success: true, message: "Return request sent to admin." });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -240,7 +266,11 @@ exports.handleReturnRequest = async (req, res) => {
     );
 
     if (!record || record.status !== "return_requested") {
-      return res.status(400).json({ message: "Return not requested." });
+      return res.status(400).json({
+        success: false,
+        message:
+          "This book has not been marked for return or has already been processed.",
+      });
     }
 
     const today = new Date();
@@ -263,7 +293,7 @@ exports.handleReturnRequest = async (req, res) => {
       record.save(),
       mailSender(
         record.userId.email,
-        "📚 Your Book Has Been Successfully Returned",
+        "✅ Return Confirmed: Your Book Has Been Successfully Returned",
         returnConfirmationEmail(
           record.userId.fullName,
           record.bookId.title,
@@ -282,12 +312,12 @@ exports.handleReturnRequest = async (req, res) => {
         Notification.create({
           user: record.userId,
           type: "fine_alert",
-          title: "Fine Incurred",
-          message: `You returned '${book.title}' late. ₹${fine} has been added as fine.`,
+          title: "Late Return Fine Applied",
+          message: `You returned '${book.title}' after the due date. A fine of ₹${fine} has been added to your account.`,
         }),
         mailSender(
           record.userId.email,
-          "Fine Alert: Please Clear Your Dues for Returned Book",
+          "📢 Late Return Fine: Please Settle Your Dues",
           fineAlertEmail(record.userId.fullName, record.bookId.title, fine)
         ).catch((err) => console.error("Fine alert mail failed", err)),
       ]);
@@ -341,20 +371,22 @@ exports.handleReturnRequest = async (req, res) => {
         Notification.create({
           user: nextUser.user,
           type: "queue_notification",
-          title: "Book Now Available",
-          message: `The book '${book.title}' is now available and has been issued to you.`,
+          title: "📘 Book Issued from Queue",
+          message: `Great news! The book '${book.title}' is now available and has been issued to you as per your queue request.`,
         }),
         mailSender(
           user.email,
           "Book Available",
           commonEmailTemplate(
-            `Hello ${user.fullName}, The book <b>${book.title}</b> is now available and has been issued to you.`
+            `Hello ${user.fullName},<br><br>We're happy to inform you that the book <b>${book.title}</b> has become available and has been automatically issued to you from the queue. Please check your dashboard for more details.`
           )
         ).catch((err) => console.error("Queue mail failed", err)),
       ]);
     }
 
-    return res.status(200).json({ success: true, message: "Return accepted." });
+    return res
+      .status(200)
+      .json({ success: true, message: "Book return processed successfully." });
   } catch (error) {
     console.error("Error in handleReturnRequest:", error);
     return res.status(500).json({
@@ -376,21 +408,22 @@ exports.renewBook = async (req, res) => {
     if (!record) {
       return res.status(404).json({
         success: false,
-        message: "Borrow record not found",
+        message: "We couldn't find a valid borrow record for this request.",
       });
     }
 
     if (record.status !== "issued") {
       return res.status(400).json({
         success: false,
-        message: "Book is not issued",
+        message: "This book is not currently issued and cannot be renewed.",
       });
     }
 
     if (record.renewCount >= 2) {
       return res.status(400).json({
         success: false,
-        message: "You have reached the maximum renew limit",
+        message:
+          "Renewal limit reached. You cannot renew this book any further.",
       });
     }
 
@@ -400,7 +433,8 @@ exports.renewBook = async (req, res) => {
     if (queue && queue.queue && queue.queue.length > 0) {
       return res.status(400).json({
         success: false,
-        message: "Book is not available for renewal as it is in queue",
+        message:
+          "This book cannot be renewed because other users are waiting in the queue.",
       });
     }
 
@@ -412,7 +446,7 @@ exports.renewBook = async (req, res) => {
     if (today <= due) {
       return res.status(400).json({
         success: false,
-        message: "You can only renew the book after the due date has passed.",
+        message: "You can only renew this book after its due date has passed.",
       });
     }
 
@@ -431,8 +465,8 @@ exports.renewBook = async (req, res) => {
         Notification.create({
           user: record.userId._id,
           type: "fine_alert",
-          title: "Fine Incurred",
-          message: `Your book '${record.bookId.title}' is overdue. A fine of ₹${fine} has been added to your account.`,
+          title: "Overdue Fine Applied",
+          message: `Your book '${record.bookId.title}' was returned late. A fine of ₹${fine} has been added to your account.`,
         }),
       ]);
     }
@@ -450,18 +484,18 @@ exports.renewBook = async (req, res) => {
       record.save(),
       mailSender(
         record.userId.email,
-        "Successfully Renewed the Book",
+        "📚 Book Renewal Successful",
         commonEmailTemplate(
-          `Your book '${
+          `Hello ${record.userId.fullName},<br><br>Your book <b>${
             record.bookId.title
-          }' has been renewed successfully. New due date is ${newDueDate.toDateString()}.`
+          }</b> has been successfully renewed. Your new due date is <b>${newDueDate.toDateString()}</b>. Please return or renew it before the due date to avoid fines.`
         )
       ),
     ]);
 
     return res.status(200).json({
       success: true,
-      message: "Book renewed successfully",
+      message: "Book renewed successfully. Please check your updated due date.",
     });
   } catch (error) {
     console.error("Renew Book Error:", error);
@@ -499,7 +533,7 @@ exports.getBorrowHistory = async (req, res) => {
         .populate({ path: "bookId", select: "title authors coverImage" })
         .skip(skip)
         .limit(limit)
-        .sort({ issueDate: -1 }),
+        .sort({ updatedAt: -1 }),
     ]);
 
     // Add Queue Position & Fine Calculation

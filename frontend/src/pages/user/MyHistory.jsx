@@ -1,5 +1,13 @@
 import Loader from "@/components/common/Loader";
 import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -22,7 +30,7 @@ const MyHistory = () => {
     returnBookLoading: false,
   });
   const [pagination, setPagination] = useState({
-    totalBooks: 0,
+    totalRecord: 0,
     currentPage: 1,
     totalPages: 1,
     pageSize: 10,
@@ -60,6 +68,30 @@ const MyHistory = () => {
   useEffect(() => {
     fetchBorrowRecord(1);
   }, [status]);
+
+  // get pagination range for pagination
+  const getPaginationRange = (currentPage, totalPages) => {
+    const range = [];
+
+    // Always show first page
+    if (currentPage > 2) {
+      range.push(1);
+      if (currentPage > 3) range.push("start-ellipsis");
+    }
+
+    // Always show current page
+    if (currentPage > 1) range.push(currentPage - 1);
+    range.push(currentPage);
+    if (currentPage < totalPages) range.push(currentPage + 1);
+
+    // Always show last page
+    if (currentPage < totalPages - 1) {
+      if (currentPage < totalPages - 2) range.push("end-ellipsis");
+      range.push(totalPages);
+    }
+
+    return range;
+  };
 
   const handleReturn = async (id) => {
     setLoading((prev) => ({ ...prev, returnBookLoading: true }));
@@ -249,6 +281,66 @@ const MyHistory = () => {
           )}
         </div>
       )}
+
+      {/* Pagination Section */}
+      <div className="flex justify-center items-center">
+        {pagination?.totalRecord > pagination?.pageSize && (
+          <Pagination>
+            <PaginationContent>
+              {/* Previous Button */}
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => {
+                    if (pagination?.currentPage > 1) {
+                      fetchBorrowRecord(pagination?.currentPage - 1); //  go to previous page
+                    }
+                  }}
+                  className={
+                    pagination?.currentPage === 1
+                      ? "pointer-events-none opacity-50"
+                      : ""
+                  }
+                />
+              </PaginationItem>
+
+              {/* Smart Page Numbers with Ellipsis */}
+              {getPaginationRange(
+                pagination?.currentPage,
+                pagination?.totalPages
+              ).map((page, idx) => (
+                <PaginationItem key={idx}>
+                  {page === "start-ellipsis" || page === "end-ellipsis" ? (
+                    <PaginationEllipsis />
+                  ) : (
+                    <PaginationLink
+                      onClick={() => fetchBorrowRecord(page)} // fetch selected page
+                      isActive={pagination?.currentPage === page}
+                    >
+                      {page}
+                    </PaginationLink>
+                  )}
+                </PaginationItem>
+              ))}
+
+              {/* Next Button */}
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => {
+                    if (pagination?.currentPage < pagination?.totalPages) {
+                      fetchBorrowRecord(pagination?.currentPage + 1); //  go to next page
+                    }
+                  }}
+                  className={
+                    pagination?.currentPage === pagination?.totalPages
+                      ? "pointer-events-none opacity-50"
+                      : ""
+                  }
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        )}
+      </div>
     </div>
   );
 };

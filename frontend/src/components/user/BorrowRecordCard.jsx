@@ -12,6 +12,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import Loader from "../common/Loader";
 
 const BorrowRecordCard = ({
   _id,
@@ -26,6 +27,8 @@ const BorrowRecordCard = ({
   queuePosition,
   onRenew,
   onReturn,
+  renewBookLoading,
+  returnBookLoading,
 }) => {
   const renderBadge = () => {
     switch (status) {
@@ -183,17 +186,31 @@ const BorrowRecordCard = ({
                 onClick={() => onRenew(_id)}
                 variant="outline"
                 className="w-full sm:w-auto sm:flex-1"
+                disabled={renewBookLoading}
               >
-                <Undo2 className="h-4 w-4 mr-2" />
-                Renew Book
+                {renewBookLoading ? (
+                  <Loader />
+                ) : (
+                  <>
+                    <Undo2 className="h-4 w-4 mr" />
+                    Renew Book{" "}
+                  </>
+                )}
               </Button>
             )}
             <Button
               onClick={() => onReturn(_id)}
               className="w-full sm:w-auto sm:flex-1"
+              disabled={returnBookLoading}
             >
-              <CheckCircle className="h-4 w-4 mr-2" />
-              Return Book
+              {returnBookLoading ? (
+                <Loader />
+              ) : (
+                <>
+                  <CheckCircle className="h-4 w-4" />
+                  Return Book
+                </>
+              )}
             </Button>
           </div>
         )}

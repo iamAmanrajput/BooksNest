@@ -9,12 +9,13 @@ import {
 import BorrowRecordCard from "@/components/user/BorrowRecordCard";
 import { formatDateTime } from "@/constants/Helper";
 import axios from "axios";
-import { BookX, FileQuestion } from "lucide-react";
+import { FileQuestion } from "lucide-react";
 import React, { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 const MyHistory = () => {
   const [borrowRecord, setBorrowRecord] = useState([]);
-  const [status, setStatus] = useState("");
+  const [status, setStatus] = useState("all");
   const [loading, setLoading] = useState({
     fetchBorrowRecordLoading: false,
     renewBookLoading: false,
@@ -59,6 +60,66 @@ const MyHistory = () => {
   useEffect(() => {
     fetchBorrowRecord(1);
   }, [status]);
+
+  const handleReturn = async (id) => {
+    setLoading((prev) => ({ ...prev, returnBookLoading: true }));
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_BACKEND_URL}/borrow/send/returnRequest/${id}`,
+        {
+          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+        }
+      );
+      if (response?.data?.success) {
+        toast.success(
+          response?.data?.message || "Return request sent to admin"
+        );
+        setBorrowRecord((prev) =>
+          prev.map((record) =>
+            record._id === id
+              ? { ...record, status: "return_requested" }
+              : record
+          )
+        );
+      }
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message ||
+          "Internal Server Error, Please try Again"
+      );
+    } finally {
+      setLoading((prev) => ({ ...prev, returnBookLoading: false }));
+    }
+  };
+
+  const handleRenew = async (id) => {
+    setLoading((prev) => ({ ...prev, renewBookLoading: true }));
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_BACKEND_URL}/borrow/send/renewRequest/${id}`,
+        {
+          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+        }
+      );
+      if (response?.data?.success) {
+        toast.success(response?.data?.message || "Renew request sent to admin");
+        fetchBorrowRecord(pagination.currentPage);
+      }
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message ||
+          "Internal Server Error, Please try Again"
+      );
+    } finally {
+      setLoading((prev) => ({ ...prev, renewBookLoading: false }));
+    }
+  };
 
   return (
     <div className="w-full px-4 py-6 text-zinc-900 dark:text-zinc-100 bg-gray-100 dark:bg-[#09090B]">
@@ -160,11 +221,16 @@ const MyHistory = () => {
                 _id={record?._id}
                 title={record?.bookId?.title}
                 coverImage={record?.bookId?.coverImage?.imageUrl}
-                author={record?.bookId?.authors[0]}
+                author={record?.bookId?.authors[0] || "Unknown"}
                 status={record?.status}
                 issueDate={
                   record?.issueDate
                     ? formatDateTime(record?.issueDate).date
+                    : ""
+                }
+                returnDate={
+                  record?.returnDate
+                    ? formatDateTime(record?.returnDate).date
                     : ""
                 }
                 dueDate={
@@ -174,8 +240,10 @@ const MyHistory = () => {
                 queuePosition={
                   record?.queuePosition ? record?.queuePosition : null
                 }
-                onRenew={() => console.log("Renewed")}
-                onReturn={() => console.log("Returned")}
+                onRenew={handleRenew}
+                renewBookLoading={loading.renewBookLoading}
+                returnBookLoading={loading.returnBookLoading}
+                onReturn={handleReturn}
               />
             ))
           )}

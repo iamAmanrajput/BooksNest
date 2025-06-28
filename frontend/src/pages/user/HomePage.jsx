@@ -77,9 +77,9 @@ const HomePage = () => {
   }, []);
 
   return (
-    <div className="px-4 flex flex-col gap-6 text-zinc-900 dark:text-zinc-100">
+    <div className="px-4 flex flex-col gap-6 bg-zinc-100 dark:bg-[#09090b] text-zinc-900 dark:text-zinc-100">
       {/* Welcome Banner */}
-      <div className="w-full bg-zinc-100 dark:bg-zinc-900 mt-6 rounded-2xl h-[10rem] flex items-center hover:shadow-md transition duration-200">
+      <div className="w-full bg-white dark:bg-zinc-900 mt-6 rounded-2xl h-[10rem] flex items-center hover:shadow-md transition duration-200">
         <div className="flex flex-col gap-3 px-10">
           <h1 className="text-3xl font-bold capitalize">
             Welcome back, {user?.fullName}

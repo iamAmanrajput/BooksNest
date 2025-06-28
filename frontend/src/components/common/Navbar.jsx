@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import axios from "axios";
 import { useDispatch } from "react-redux";
 import { setUserLogout } from "@/redux/slices/authSlice";
+import NotificationPopOver from "../user/NotificationPopover";
 
 const Navbar = () => {
   const location = useLocation();
@@ -52,11 +53,9 @@ const Navbar = () => {
           {firstSegment ? firstSegment : "Dashboard"}
         </h1>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <ModeToggle />
-          <Button variant="outline" size="icon">
-            <Bell className="size-4 text-zinc-600 dark:text-zinc-300" />
-          </Button>
+          <NotificationPopOver />
           <Button onClick={handleLogout} variant="outline" size="icon">
             <LogOut className="size-4 text-zinc-600 dark:text-zinc-300" />
           </Button>

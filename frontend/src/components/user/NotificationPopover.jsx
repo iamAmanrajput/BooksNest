@@ -3,67 +3,204 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Bell, Trash2 } from "lucide-react";
+import {
+  AlarmClock,
+  Bell,
+  BookOpen,
+  CalendarClock,
+  CheckCircle2,
+  IndianRupee,
+  MailOpen,
+  Trash2,
+  XCircle,
+} from "lucide-react";
 import { Button } from "../ui/button";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ScrollArea } from "../ui/scroll-area";
 import { Badge } from "../ui/badge";
+import axios from "axios";
+import { toast } from "sonner";
+import { formatDateTime } from "@/constants/Helper";
+import Loader from "../common/Loader";
 
 const NotificationPopOver = () => {
   const [isNotificationModelOpen, setIsNotificationModelOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState({
+    fechNotificationLoading: false,
+    clearNotificationLoading: false,
+  });
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
+
+  useEffect(() => {
+    const fetchUnreadNotificationCount = async (req, res) => {
+      try {
+        const response = await axios.get(
+          `${import.meta.env.VITE_BACKEND_URL}/notification/count`,
+          {
+            withCredentials: true,
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+            },
+          }
+        );
+        if (response?.data?.success) {
+          setUnreadNotificationCount(response?.data?.data);
+        }
+      } catch (error) {
+        console.log(error?.response?.data?.message || "Internal Server Error");
+        toast.error(error?.response?.data?.message || "Internal Server Error");
+      }
+    };
+    fetchUnreadNotificationCount();
+  }, []);
+
+  const notificationMeta = [
+    {
+      type: "due_reminder",
+      icon: AlarmClock,
+      color: "text-red-500",
+    },
+    {
+      type: "queue_notification",
+      icon: MailOpen,
+      color: "text-blue-500",
+    },
+    {
+      type: "fine_alert",
+      icon: IndianRupee,
+      color: "text-yellow-500",
+    },
+    {
+      type: "book_available",
+      icon: BookOpen,
+      color: "text-green-600",
+    },
+    {
+      type: "queue_reminder",
+      icon: CalendarClock,
+      color: "text-purple-500",
+    },
+    {
+      type: "request_approved",
+      icon: CheckCircle2,
+      color: "text-emerald-500",
+    },
+    {
+      type: "request_rejected",
+      icon: XCircle,
+      color: "text-rose-500",
+    },
+  ];
+
+  const handleFetchNotifications = async () => {
+    setLoading((prev) => ({ ...prev, fechNotificationLoading: true }));
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_BACKEND_URL}/notification/notifications`,
+        {
+          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+        }
+      );
+      if (response?.data?.success) {
+        setNotifications(response?.data?.data);
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error(error?.response?.data?.message || "Internal Server Error");
+    } finally {
+      setLoading((prev) => ({ ...prev, fechNotificationLoading: false }));
+    }
+  };
+
   return (
     <Popover
       open={isNotificationModelOpen}
       onOpenChange={setIsNotificationModelOpen}
     >
       <PopoverTrigger asChild className="cursor-pointer">
-        <Button variant="outline" className="relative" size="icon">
+        <Button
+          onClick={handleFetchNotifications}
+          variant="outline"
+          className="relative"
+          size="icon"
+        >
           <Bell className="size-4 text-zinc-600 dark:text-zinc-300 cursor-pointer" />
-          <Badge
-            variant="destructive"
-            className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs"
-          >
-            {/* {unreadCount > 9 ? "9+" : unreadCount} */} 9+
-          </Badge>
+          {unreadNotificationCount > 0 && (
+            <Badge
+              variant="destructive"
+              className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs"
+            >
+              {unreadNotificationCount > 9 ? "9+" : unreadNotificationCount}
+            </Badge>
+          )}
         </Button>
       </PopoverTrigger>
       <PopoverContent align="center" className=" w-80 sm:w-100 mr-4 sm:mr-8">
         <div className="border-b pb-4">
           <h3 className="font-semibold text-center text-xl">Notifications</h3>
         </div>
-        {/* {notifications?.length === 0 ? (
+        {loading.fechNotificationLoading ? (
+          <div className="flex justify-center my-10">
+            {" "}
+            <Loader width={6} height={30} />
+          </div>
+        ) : notifications?.length === 0 ? (
           <div className="p-8 text-center">
             <Bell className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
             <p className="text-sm text-muted-foreground">No notifications</p>
           </div>
-        ) : ( */}
-        <ScrollArea className="h-100">
-          {[...Array(4)].map((_, i) => (
-            <div
-              key={i}
-              className="flex items-start gap-3 p-4 rounded-xl bg-white dark:bg-zinc-900 transition-all cursor-pointer border border-muted/30 
-             hover:shadow-lg hover:-translate-y-0.5 hover:border-muted 
-             duration-200 ease-in-out my-4"
-              onClick={() => console.log("Marked as read")}
-            >
-              {/* Icon */}
-              <div className="text-xl mt-1 transition-transform duration-200 group-hover:scale-110">
-                📚
-              </div>
+        ) : (
+          <ScrollArea className="h-100">
+            {notifications?.map((notification) => {
+              const meta = notificationMeta.find(
+                (item) => item.type === notification?.type
+              );
+              return (
+                <div
+                  key={notification._id}
+                  className="flex items-start gap-3 p-4 rounded-xl bg-white dark:bg-zinc-900 transition-all cursor-pointer border border-muted/30 
+  hover:shadow-lg hover:-translate-y-0.5 hover:border-muted 
+  duration-200 ease-in-out my-4"
+                >
+                  {/* Blue Dot */}
+                  {!notification?.isRead && (
+                    <span className="mt-2 h-2 w-2 bg-blue-500 rounded-full flex-shrink-0" />
+                  )}
 
-              {/* Title / Message */}
-              <p className="text-sm font-medium text-foreground leading-relaxed line-clamp-4">
-                Book Available — Lorem ipsum dolor sit, amet consectetur
-                adipisicing elit. Aspernatur dolores libero provident commodi
-                itaque molestiae, rerum dolorem eum veritatis neque consequuntur
-                necessitatibus eligendi nisi ipsa quidem possimus, fugit labore?
-              </p>
-            </div>
-          ))}
-        </ScrollArea>
+                  {/* Icon */}
+                  <div className="text-xl mt-1 flex-shrink-0">
+                    {" "}
+                    {meta?.icon && (
+                      <meta.icon className={`w-6 h-6 ${meta.color}`} />
+                    )}
+                  </div>
 
-        {/* )} */}
+                  {/* Title / Message + Date */}
+                  <div className="flex flex-col text-xs font-medium text-foreground leading-relaxed">
+                    <p>
+                      <span className="font-bold">{notification?.title}</span> —{" "}
+                      {notification?.message}
+                    </p>
+
+                    {/* Date & Time */}
+                    <div className="flex gap-3 items-center mt-2">
+                      <span className="text-xs text-muted-foreground">
+                        {formatDateTime(notification?.createdAt).date}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {formatDateTime(notification?.createdAt).time}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </ScrollArea>
+        )}
         <div className="pt-4 border-t">
           <Button
             variant="ghost"

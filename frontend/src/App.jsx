@@ -10,6 +10,7 @@ import PageNotFound from "./components/common/PageNotFound";
 import FeatureComingSoon from "./components/common/FeatureComingSoon";
 import AllBooks from "./pages/user/AllBooks";
 import MyHistory from "./pages/user/MyHistory";
+import MyProfile from "./pages/user/MyProfile";
 
 const App = () => {
   return (
@@ -54,7 +55,14 @@ const App = () => {
           }
         />
 
-
+        <Route
+          path="/profile"
+          element={
+            <UserLayout>
+              <MyProfile />
+            </UserLayout>
+          }
+        />
 
         {/* Admin Routes */}
         <Route path="/admin/signin" element={<AdminLogin />} />

@@ -116,6 +116,32 @@ const NotificationPopOver = () => {
     }
   };
 
+  const handleClearNotifications = async () => {
+    setLoading((prev) => ({ ...prev, clearNotificationLoading: true }));
+    try {
+      const response = await axios.delete(
+        `${import.meta.env.VITE_BACKEND_URL}/notification/clear`,
+        {
+          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+        }
+      );
+      if (response?.data?.success) {
+        setNotifications([]);
+        toast.success(
+          response?.data?.message || "Notifications cleared successfully"
+        );
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error(error?.response?.data?.message || "Internal Server Error");
+    } finally {
+      setLoading((prev) => ({ ...prev, clearNotificationLoading: false }));
+    }
+  };
+
   return (
     <Popover
       open={isNotificationModelOpen}
@@ -204,11 +230,19 @@ const NotificationPopOver = () => {
         <div className="pt-4 border-t">
           <Button
             variant="ghost"
+            onClick={handleClearNotifications}
+            disabled={loading.clearNotificationLoading}
             size="sm"
             className="w-full text-xs h-8 text-muted-foreground hover:text-foreground"
           >
-            <Trash2 className="h-3 w-3 mr-1" />
-            Clear all notifications
+            {loading.clearNotificationLoading ? (
+              <Loader />
+            ) : (
+              <>
+                <Trash2 className="h-3 w-3 mr-1" />
+                Clear all notifications
+              </>
+            )}
           </Button>
         </div>
       </PopoverContent>

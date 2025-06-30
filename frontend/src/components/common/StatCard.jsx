@@ -41,7 +41,7 @@ const StatCard = ({ icon: Icon, title, value, color = "blue" }) => {
           <p className="text-sm font-medium text-gray-600 dark:text-customIsabelline">
             {title}
           </p>
-          <p className="text-2xl font-bold text-zinc-900 dark:text-customIsabelline">
+          <p className="text-xl font-bold text-zinc-900 dark:text-customIsabelline">
             {value != null ? value : <Spinner />}
           </p>
         </div>

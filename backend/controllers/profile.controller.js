@@ -42,13 +42,17 @@ exports.getCurrentUserData = async (req, res) => {
   try {
     const userId = req.user._id;
 
-    const [user, issuedBooksCount] = await Promise.all([
+    const [user, issuedBooksCount, totalBorrowedBooks] = await Promise.all([
       User.findById(userId)
         .select(
-          "fullName email gender profilePic fineAmount wishlist createdAt updatedAt"
+          "fullName email gender profilePic fineAmount wishlist createdAt updatedAt profileLastUpdated"
         )
         .lean(),
       BorrowRecord.countDocuments({ userId, status: "issued" }),
+      BorrowRecord.countDocuments({
+        userId,
+        status: { $in: ["issued", "returned"] },
+      }),
     ]);
 
     if (!user) {
@@ -62,6 +66,7 @@ exports.getCurrentUserData = async (req, res) => {
       success: true,
       data: user,
       issuedBooksCount,
+      totalBorrowedBooks,
     });
   } catch (error) {
     console.error("Error in getCurrentUserData:", error);

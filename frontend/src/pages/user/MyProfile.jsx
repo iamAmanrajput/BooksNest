@@ -13,6 +13,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -24,15 +30,14 @@ import axios from "axios";
 import {
   Activity,
   BookOpen,
-  Calendar,
   CalendarCheck,
   Clock,
-  DollarSign,
+  Edit,
   Edit3,
   Eye,
   EyeOff,
   Heart,
-  IndianRupee,
+  Upload,
   Key,
   Mail,
   Save,
@@ -44,6 +49,7 @@ import {
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const MyProfile = () => {
   const [userData, setUserData] = useState(null);
@@ -53,15 +59,19 @@ const MyProfile = () => {
     fetchUserLoading: false,
     saveProfileLoading: false,
     updatePasswordLoading: false,
+    uploadPicLoading: false,
   });
   const [isEditing, setIsEditing] = useState(false);
   const [showPasswordSection, setShowPasswordSection] = useState(false);
   const [error, setError] = useState("");
+  const [isPicEditModelOpen, setIsPicEditModelOpen] = useState(false);
   const [userFormData, setUserFormData] = useState({
     fullName: "",
     email: "",
     gender: "",
   });
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [profilePicPreview, setProfilePicPreview] = useState("");
   const [passwords, setPasswords] = useState({
     currentPassword: "",
     newPassword: "",
@@ -104,20 +114,29 @@ const MyProfile = () => {
     fetchUserData();
   }, []);
 
+  // handle save profile
   const handleSaveProfile = async (e) => {
     e.preventDefault();
+
     setLoading((prev) => ({ ...prev, saveProfileLoading: true }));
 
-    if (!userFormData.fullName?.trim()) {
-      return toast.error("Username is required.");
+    const { fullName, email } = userFormData;
+
+    // Validations
+    if (!fullName?.trim()) {
+      setLoading((prev) => ({ ...prev, saveProfileLoading: false }));
+      return toast.error("Full name is required.");
     }
 
-    if (!userFormData.email?.trim()) {
+    if (!email?.trim()) {
+      setLoading((prev) => ({ ...prev, saveProfileLoading: false }));
       return toast.error("Email is required.");
     }
 
-    if (!/\S+@\S+\.\S+/.test(userFormData.email)) {
-      return toast.error("Enter a valid email.");
+    const emailRegex = /^\S+@\S+\.\S+$/;
+    if (!emailRegex.test(email)) {
+      setLoading((prev) => ({ ...prev, saveProfileLoading: false }));
+      return toast.error("Enter a valid email address.");
     }
 
     try {
@@ -133,62 +152,150 @@ const MyProfile = () => {
       );
 
       if (response?.data?.success) {
-        const user = response.data.data;
+        const updatedUser = response.data.data;
 
-        setUserFormData(user);
+        // Update form state and global user data
+        setUserFormData(updatedUser);
         setUserData((prev) => ({
           ...prev,
-          fullName: user.fullName,
-          email: user.email,
-          gender: user.gender,
+          fullName: updatedUser.fullName,
+          email: updatedUser.email,
+          gender: updatedUser.gender,
         }));
+
         setIsEditing(false);
         toast.success("Profile updated successfully.");
       }
     } catch (error) {
-      console.error(error);
+      console.error("Profile update error:", error);
       toast.error(error?.response?.data?.message || "Internal Server Error");
     } finally {
       setLoading((prev) => ({ ...prev, saveProfileLoading: false }));
     }
   };
 
-  //Todo
-  const handlePasswordUpdate = (e) => {
+  // handle update password
+  const handlePasswordUpdate = async (e) => {
     e.preventDefault();
+    setError("");
     setLoading((prev) => ({ ...prev, updatePasswordLoading: true }));
-    if (!passwords.currentPassword.trim()) {
-      toast.error("Current Password is Required");
-    }
-    if (!passwords.newPassword.trim()) {
-      toast.error("Current Password is Required");
-    }
-    if (!passwords.confirmPassword.trim()) {
-      toast.error("Current Password is Required");
-    }
 
-    if (
-      !passwords.currentPassword.trim() ||
-      !passwords.newPassword.trim() ||
-      !passwords.confirmPassword.trim()
-    ) {
-      return toast.error();
-    }
+    const { currentPassword, newPassword, confirmPassword } = passwords;
 
-    if (passwords.newPassword !== passwords.confirmPassword) {
-      alert("New passwords do not match.");
+    // Input Validations
+    if (!currentPassword.trim()) {
+      setError("Current Password is required");
+      setLoading((prev) => ({ ...prev, updatePasswordLoading: false }));
+      return;
+    }
+    if (!newPassword.trim()) {
+      setError("New Password is required");
+      setLoading((prev) => ({ ...prev, updatePasswordLoading: false }));
+      return;
+    }
+    if (!confirmPassword.trim()) {
+      setError("Confirm Password is required");
+      setLoading((prev) => ({ ...prev, updatePasswordLoading: false }));
       return;
     }
 
-    console.log("Password update submitted", passwords);
+    if (newPassword !== confirmPassword) {
+      setError("New passwords do not match");
+      setLoading((prev) => ({ ...prev, updatePasswordLoading: false }));
+      return;
+    }
 
-    // Reset fields
-    setPasswords({
-      currentPassword: "",
-      newPassword: "",
-      confirmPassword: "",
-    });
+    if (newPassword.length < 6 || confirmPassword.length < 6) {
+      setError("Password must be at least 6 characters long");
+      setLoading((prev) => ({ ...prev, updatePasswordLoading: false }));
+      return;
+    }
+
+    try {
+      const response = await axios.patch(
+        `${import.meta.env.VITE_BACKEND_URL}/profile/updatePassword`,
+        { currentPassword, newPassword },
+        {
+          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+        }
+      );
+
+      if (response?.data?.success) {
+        toast.success("Password updated successfully");
+        setPasswords({
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: "",
+        });
+      }
+    } catch (error) {
+      console.error("Password update error:", error);
+      toast.error(error?.response?.data?.message || "Internal Server Error");
+    } finally {
+      setLoading((prev) => ({ ...prev, updatePasswordLoading: false }));
+    }
   };
+
+  const handleProfilePicChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedFile(file);
+      setProfilePicPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleSaveProfilePic = async (e) => {
+    e.preventDefault();
+    if (!selectedFile) {
+      return toast.error("Please select a file");
+    }
+    setLoading((prev) => ({ ...prev, uploadPicLoading: true }));
+    try {
+      const formData = new FormData();
+      formData.append("image", selectedFile);
+
+      const response = await axios.patch(
+        `${import.meta.env.VITE_BACKEND_URL}/profile/updateProfilePic`,
+        formData,
+        {
+          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+        }
+      );
+
+      if (response?.data?.success) {
+        toast.success("Profile picture updated");
+        setUserData((prev) => ({
+          ...prev,
+          profilePic: response.data.data.profilePic,
+        }));
+        setIsPicEditModelOpen(false);
+        setProfilePicPreview("");
+        setSelectedFile(null);
+      }
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Upload failed");
+    } finally {
+      setLoading((prev) => ({ ...prev, uploadPicLoading: false }));
+    }
+  };
+
+  const handleCancelPicUpload = () => {
+    setIsPicEditModelOpen(false);
+    setSelectedFile(null);
+    setProfilePicPreview("");
+  };
+
+  const handleClearPreview = () => {
+    setSelectedFile(null);
+    setProfilePicPreview("");
+  };
+
   return loading.fetchUserLoading ? (
     <div className="flex justify-center my-10">
       {" "}
@@ -226,20 +333,26 @@ const MyProfile = () => {
       <div className="w-full mt-6 bg-white dark:bg-zinc-900 rounded-2xl shadow-lg p-4 sm:p-6 text-zinc-900 dark:text-zinc-100">
         {/* Avatar */}
         <div className="flex justify-center mb-6">
-          <Avatar className="w-36 h-36 border-4 border-zinc-300 dark:border-zinc-700 shadow-xl">
-            <AvatarImage
-              src={userData?.profilePic?.imageUrl}
-              alt={userData?.fullName}
+          <div className="relative w-36 h-36">
+            <Avatar className="w-36 h-36 border-4 border-zinc-300 dark:border-zinc-700 shadow-xl">
+              <AvatarImage
+                src={userData?.profilePic?.imageUrl}
+                alt={userData?.fullName || "aman"}
+              />
+              <AvatarFallback className="text-3xl capitalize bg-zinc-800 text-white border-2 border-zinc-700">
+                {userData?.fullName
+                  ?.split(" ")
+                  .map((word) => word[0])
+                  .join("")
+                  .slice(0, 2)
+                  .toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <Edit
+              onClick={() => setIsPicEditModelOpen(true)}
+              className="absolute bottom-2 w-7 h-7 right-1 z-20 text-blue-500 bg-white dark:bg-zinc-900 rounded-full p-1 shadow-md cursor-pointer"
             />
-            <AvatarFallback className="text-3xl capitalize bg-zinc-800 text-white border-2 border-zinc-700">
-              {userData?.fullName
-                ?.split(" ")
-                .map((word) => word[0])
-                .join("")
-                .slice(0, 2)
-                .toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
+          </div>
         </div>
 
         {/* Name + Email + Badges */}
@@ -502,9 +615,19 @@ const MyProfile = () => {
                 </div>
               )}
 
-              <Button type="submit" className="w-full">
-                <Key className="w-4 h-4 mr-1" />
-                Update Password
+              <Button
+                type="submit"
+                disabled={loading.updatePasswordLoading}
+                className="w-full"
+              >
+                {loading.updatePasswordLoading ? (
+                  <Loader />
+                ) : (
+                  <>
+                    <Key className="w-4 h-4 mr-1" />
+                    Update Password
+                  </>
+                )}
               </Button>
             </form>
           </CardContent>
@@ -559,6 +682,123 @@ const MyProfile = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Profile Photo Update Dialog */}
+      <Dialog open={isPicEditModelOpen} onOpenChange={setIsPicEditModelOpen}>
+        <DialogContent className="max-w-lg w-[90vw] max-h-[90vh] bg-white dark:bg-zinc-900 border-0 text-zinc-900 dark:text-zinc-100 shadow-2xl rounded-2xl p-0">
+          {/* Header */}
+          <DialogHeader className="px-6 py-5 border-b border-zinc-200/50 dark:border-zinc-800/50">
+            <DialogTitle className="text-xl font-bold flex gap-3 items-center">
+              <Upload className="w-6 h-6 text-zinc-600 dark:text-zinc-400" />
+              <span>Update Profile Picture</span>
+            </DialogTitle>
+          </DialogHeader>
+
+          {/* Scrollable Content */}
+          <ScrollArea className="max-h-[70vh]">
+            <div className="px-6 py-6 space-y-8">
+              {/* Avatar Preview */}
+              <div className="flex justify-center">
+                <div className="relative group">
+                  <div className="absolute -inset-1 bg-gradient-to-r from-zinc-300 to-zinc-400 dark:from-zinc-600 dark:to-zinc-700 rounded-full blur opacity-25 group-hover:opacity-40 transition duration-300"></div>
+                  <Avatar className="relative w-40 h-40 border-4 border-white dark:border-zinc-800 shadow-xl ring-4 ring-zinc-100 dark:ring-zinc-800/50">
+                    <AvatarImage
+                      src={
+                        profilePicPreview ||
+                        "/placeholder.svg?height=160&width=160"
+                      }
+                      alt="Profile Preview"
+                      className="object-cover"
+                    />
+                    <AvatarFallback className="text-4xl bg-gradient-to-br from-zinc-100 to-zinc-200 dark:from-zinc-800 dark:to-zinc-900 text-zinc-800 dark:text-zinc-200 font-bold">
+                      {userData?.fullName
+                        ?.split(" ")
+                        .map((word) => word[0])
+                        .join("")
+                        .slice(0, 2)
+                        .toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  {profilePicPreview && (
+                    <X
+                      onClick={handleClearPreview}
+                      className="absolute top-4 right-2 w-6 h-6 z-20 text-customGray bg-white dark:bg-zinc-900 rounded-full p-1 shadow-md cursor-pointer"
+                    />
+                  )}
+                </div>
+              </div>
+
+              {/* File Upload */}
+              <div className="space-y-4">
+                <Label className="text-sm font-bold text-zinc-800 dark:text-zinc-200 uppercase tracking-wide">
+                  Select Image File
+                </Label>
+                <div className="relative">
+                  <div className="border-2 border-dashed border-zinc-300 dark:border-zinc-700 rounded-xl p-6 bg-zinc-50/50 dark:bg-zinc-800/30 hover:border-zinc-400 dark:hover:border-zinc-600 transition-colors duration-200">
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleProfilePicChange}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                    />
+                    <div className="text-center space-y-3">
+                      <div className="mx-auto w-12 h-12 bg-zinc-200 dark:bg-zinc-700 rounded-full flex items-center justify-center">
+                        <Upload className="w-6 h-6 text-zinc-500 dark:text-zinc-400" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+                          Click to upload or drag and drop
+                        </p>
+                        <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                          JPG, PNG, GIF up to 5MB
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* File Info */}
+                <div className="bg-zinc-100 dark:bg-zinc-800/50 rounded-lg p-4 border border-zinc-200 dark:border-zinc-700/50">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-green-600 animate-pulse rounded-full"></div>
+                    <p className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
+                      Supported formats: JPG, PNG, GIF • Max size: 5MB
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-4">
+                <Button
+                  onClick={handleSaveProfilePic}
+                  disabled={!profilePicPreview || loading.uploadPicLoading}
+                  className="flex-1 h-12 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-200 font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading.uploadPicLoading ? (
+                    <Loader />
+                  ) : (
+                    <>
+                      <Save className="w-5 h-5 mr-3" />
+                      <span>Save Picture</span>
+                    </>
+                  )}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleCancelPicUpload}
+                  disabled={loading.uploadPicLoading}
+                  className="h-12 px-6 border-2 border-zinc-300 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 font-semibold rounded-xl transition-all duration-200 disabled:opacity-50 bg-transparent"
+                >
+                  <X className="w-5 h-5 mr-2" />
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

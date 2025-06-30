@@ -1,3 +1,4 @@
+import Loader from "@/components/common/Loader";
 import StatCard from "@/components/common/StatCard";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +19,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { formatDateTime } from "@/constants/Helper";
+import axios from "axios";
 import {
   Activity,
   BookOpen,
@@ -39,39 +42,137 @@ import {
   Wallet,
   X,
 } from "lucide-react";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 const MyProfile = () => {
+  const [userData, setUserData] = useState(null);
+  const [totalBorrowedBooks, setTotalBorrowedBooks] = useState(0);
+  const [issuedBooks, setIssuedBooks] = useState(0);
+  const [loading, setLoading] = useState({
+    fetchUserLoading: false,
+    saveProfileLoading: false,
+    updatePasswordLoading: false,
+  });
   const [isEditing, setIsEditing] = useState(false);
   const [showPasswordSection, setShowPasswordSection] = useState(false);
+  const [error, setError] = useState("");
+  const [userFormData, setUserFormData] = useState({
+    fullName: "",
+    email: "",
+    gender: "",
+  });
   const [passwords, setPasswords] = useState({
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
   });
 
-  const [userData, setUserData] = useState({
-    fullName: "Aman Singh",
-    email: "aman.it360@gmail.com",
-    gender: "male",
-  });
+  useEffect(() => {
+    const fetchUserData = async () => {
+      setLoading((prev) => ({ ...prev, fetchUserLoading: true }));
+      try {
+        const response = await axios.get(
+          `${import.meta.env.VITE_BACKEND_URL}/profile/currentUser`,
+          {
+            withCredentials: true,
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+            },
+          }
+        );
+        if (response?.data?.success) {
+          const user = response.data.data;
+          setUserData(user);
+          setIssuedBooks(response?.data?.issuedBooksCount);
+          setTotalBorrowedBooks(response?.data?.totalBorrowedBooks);
+          setUserFormData((prev) => ({
+            ...prev,
+            fullName: user?.fullName,
+            email: user?.email,
+            gender: user?.gender,
+          }));
+        }
+      } catch (error) {
+        console.log(error);
+        toast.error(error?.response?.data?.message || "Internal Server Error");
+      } finally {
+        setLoading((prev) => ({ ...prev, fetchUserLoading: false }));
+      }
+    };
 
-  const handleSaveProfile = () => {
-    // Save logic here (API call etc.)
-    console.log("Saved:", userData);
-    setIsEditing(false);
+    fetchUserData();
+  }, []);
+
+  const handleSaveProfile = async (e) => {
+    e.preventDefault();
+    setLoading((prev) => ({ ...prev, saveProfileLoading: true }));
+
+    if (!userFormData.fullName?.trim()) {
+      return toast.error("Username is required.");
+    }
+
+    if (!userFormData.email?.trim()) {
+      return toast.error("Email is required.");
+    }
+
+    if (!/\S+@\S+\.\S+/.test(userFormData.email)) {
+      return toast.error("Enter a valid email.");
+    }
+
+    try {
+      const response = await axios.patch(
+        `${import.meta.env.VITE_BACKEND_URL}/profile/updateProfile`,
+        userFormData,
+        {
+          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+        }
+      );
+
+      if (response?.data?.success) {
+        const user = response.data.data;
+
+        setUserFormData(user);
+        setUserData((prev) => ({
+          ...prev,
+          fullName: user.fullName,
+          email: user.email,
+          gender: user.gender,
+        }));
+        setIsEditing(false);
+        toast.success("Profile updated successfully.");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error(error?.response?.data?.message || "Internal Server Error");
+    } finally {
+      setLoading((prev) => ({ ...prev, saveProfileLoading: false }));
+    }
   };
 
+  //Todo
   const handlePasswordUpdate = (e) => {
     e.preventDefault();
+    setLoading((prev) => ({ ...prev, updatePasswordLoading: true }));
+    if (!passwords.currentPassword.trim()) {
+      toast.error("Current Password is Required");
+    }
+    if (!passwords.newPassword.trim()) {
+      toast.error("Current Password is Required");
+    }
+    if (!passwords.confirmPassword.trim()) {
+      toast.error("Current Password is Required");
+    }
 
     if (
-      !passwords.currentPassword ||
-      !passwords.newPassword ||
-      !passwords.confirmPassword
+      !passwords.currentPassword.trim() ||
+      !passwords.newPassword.trim() ||
+      !passwords.confirmPassword.trim()
     ) {
-      alert("Please fill in all password fields.");
-      return;
+      return toast.error();
     }
 
     if (passwords.newPassword !== passwords.confirmPassword) {
@@ -88,35 +189,55 @@ const MyProfile = () => {
       confirmPassword: "",
     });
   };
-  return (
+  return loading.fetchUserLoading ? (
+    <div className="flex justify-center my-10">
+      {" "}
+      <Loader width={9} height={40} />
+    </div>
+  ) : (
     <div className="px-4 py-6 flex flex-col items-center bg-zinc-100 dark:bg-[#09090b] text-zinc-900 dark:text-zinc-100 min-h-screen">
       {/* Profile Stats Container */}
       <div className="w-full gap-6 grid grid-cols-1 md:grid-cols-3">
         <StatCard
           icon={BookOpen}
           title="Total Borrowed"
-          value={11}
+          value={loading.fetchUserLoading ? null : totalBorrowedBooks}
           color="blue"
         />
-        <StatCard icon={Wallet} title="Total Fine" value="₹ 120" color="red" />
+        <StatCard
+          icon={Wallet}
+          title="Total Fine"
+          value={loading.fetchUserLoading ? null : `₹ ${userData?.fineAmount}`}
+          color="red"
+        />
         <StatCard
           icon={CalendarCheck}
           title="Member Since"
-          value="Jan 2023"
+          value={
+            loading.fetchUserLoading
+              ? null
+              : formatDateTime(userData?.createdAt)?.date
+          }
           color="green"
         />
       </div>
+
       {/* Profile Container */}
       <div className="w-full mt-6 bg-white dark:bg-zinc-900 rounded-2xl shadow-lg p-4 sm:p-6 text-zinc-900 dark:text-zinc-100">
         {/* Avatar */}
         <div className="flex justify-center mb-6">
           <Avatar className="w-36 h-36 border-4 border-zinc-300 dark:border-zinc-700 shadow-xl">
             <AvatarImage
-              src="https://imgs.search.brave.com/kCtAzsCDlzF-1kkfxGPq_RZn3yGenQDdpxWtNiazDu8/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9tZWRp/YS5nZXR0eWltYWdl/cy5jb20vaWQvOTMz/NzE0MjAvcGhvdG8v/dW5pdGVkLXN0YXRl/cy1oYXBweS1kYXlz/LWFkLWdhbGxlcnkt/MTk3NC1oZW5yeS13/aW5rbGVyLmpwZz9z/PTYxMng2MTImdz0w/Jms9MjAmYz1FWnVV/RjNqai02NHlINmJk/dFVEWFQ3QlN4dXJF/RUxteDFGOHhCV1JM/dGJnPQ"
-              alt="Profile"
+              src={userData?.profilePic?.imageUrl}
+              alt={userData?.fullName}
             />
-            <AvatarFallback className="text-3xl bg-zinc-800 text-white border-2 border-zinc-700">
-              AK
+            <AvatarFallback className="text-3xl capitalize bg-zinc-800 text-white border-2 border-zinc-700">
+              {userData?.fullName
+                ?.split(" ")
+                .map((word) => word[0])
+                .join("")
+                .slice(0, 2)
+                .toUpperCase()}
             </AvatarFallback>
           </Avatar>
         </div>
@@ -144,14 +265,14 @@ const MyProfile = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
           <div className="rounded-lg p-4 border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-center shadow">
             <BookOpen className="w-8 h-8 text-customblue mx-auto mb-2" />
-            <p className="text-2xl font-bold">11</p>
+            <p className="text-2xl font-bold">{issuedBooks}</p>
             <p className="text-xs font-semibold text-zinc-600 dark:text-zinc-400 uppercase tracking-wide">
-              Books Borrowed
+              Issued Books
             </p>
           </div>
           <div className="rounded-lg p-4 border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-center shadow">
             <Heart className="w-8 h-8 text-red-500 mx-auto mb-2" />
-            <p className="text-2xl font-bold">0</p>
+            <p className="text-2xl font-bold">{userData?.wishlist?.length}</p>
             <p className="text-xs font-semibold text-zinc-600 dark:text-zinc-400 uppercase tracking-wide">
               Wishlist Items
             </p>
@@ -164,7 +285,7 @@ const MyProfile = () => {
             Account ID
           </p>
           <code className="text-xs bg-zinc-100 dark:bg-zinc-800 px-3 py-1 rounded border border-zinc-300 dark:border-zinc-700 text-zinc-800 dark:text-zinc-300">
-            156233r343443
+            {userData?._id}
           </code>
         </div>
       </div>
@@ -172,7 +293,7 @@ const MyProfile = () => {
       {/* Personel Information */}
       <Card className="bg-white mt-6 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-lg w-full">
         <CardHeader className="border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
-          <div className="flex flex-col sm:flex-row gap-6 sm:gap-0 items-center justify-between">
+          <div className="flex flex-col sm:flex-row gap-6 sm:gap-0 sm:items-center items-start justify-between">
             <div className="flex items-center gap-3">
               <Settings className="w-6 h-6 text-zinc-600 dark:text-zinc-400" />
               <div>
@@ -180,7 +301,7 @@ const MyProfile = () => {
                   Personal Information
                 </CardTitle>
                 <CardDescription className="text-zinc-500 dark:text-zinc-400 mt-1 text-xs font-bold">
-                  Update your personal information and preferences
+                  Update your personal information
                 </CardDescription>
               </div>
             </div>
@@ -188,18 +309,27 @@ const MyProfile = () => {
               onClick={() =>
                 isEditing ? handleSaveProfile() : setIsEditing(true)
               }
+              disabled={loading.saveProfileLoading}
               className={
                 isEditing
-                  ? "bg-customblue text-white hover:bg-blue-700"
-                  : "bg-zinc-800 text-white hover:bg-zinc-700 border border-zinc-700"
+                  ? "bg-customblue self-center sm:self-auto text-white hover:bg-blue-700"
+                  : "bg-zinc-800 self-center sm:self-auto text-white hover:bg-zinc-700 border border-zinc-700"
               }
             >
               {isEditing ? (
-                <Save className="w-4 h-4 mr-2" />
+                loading.saveProfileLoading ? (
+                  <Loader color="#FFFFFF" />
+                ) : (
+                  <Save className="w-4 h-4 mr-2" />
+                )
               ) : (
                 <Edit3 className="w-4 h-4 mr-2" />
               )}
-              {isEditing ? "Save Changes" : "Edit Profile"}
+              {isEditing
+                ? loading.saveProfileLoading
+                  ? ""
+                  : "Save Changes"
+                : "Edit Profile"}
             </Button>
           </div>
         </CardHeader>
@@ -211,9 +341,9 @@ const MyProfile = () => {
                 Full Name
               </Label>
               <Input
-                value={userData.fullName}
+                value={userFormData.fullName}
                 onChange={(e) =>
-                  setUserData({ ...userData, fullName: e.target.value })
+                  setUserFormData({ ...userFormData, fullName: e.target.value })
                 }
                 disabled={!isEditing}
                 className="bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:border-customblue focus:ring-customblue"
@@ -225,9 +355,9 @@ const MyProfile = () => {
               </Label>
               <Input
                 type="email"
-                value={userData.email}
+                value={userFormData.email}
                 onChange={(e) =>
-                  setUserData({ ...userData, email: e.target.value })
+                  setUserFormData({ ...userFormData, email: e.target.value })
                 }
                 disabled={!isEditing}
                 className="bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:border-customblue focus:ring-customblue"
@@ -240,9 +370,9 @@ const MyProfile = () => {
               Gender
             </Label>
             <Select
-              value={userData.gender}
+              value={userFormData.gender}
               onValueChange={(value) =>
-                setUserData({ ...userData, gender: value })
+                setUserFormData({ ...userFormData, gender: value })
               }
               disabled={!isEditing}
             >
@@ -260,10 +390,17 @@ const MyProfile = () => {
             <div className="flex gap-3 pt-6 border-t border-zinc-200 dark:border-zinc-800">
               <Button
                 onClick={handleSaveProfile}
+                disabled={loading.saveProfileLoading}
                 className="flex-1 bg-customblue text-white hover:bg-blue-700"
               >
-                <Save className="w-4 h-4 mr-2" />
-                Save Changes
+                {loading.saveProfileLoading ? (
+                  <Loader color="#FFFFFF" />
+                ) : (
+                  <>
+                    <Save className="w-4 h-4 mr-2" />
+                    Save Changes
+                  </>
+                )}
               </Button>
               <Button
                 variant="outline"
@@ -285,7 +422,7 @@ const MyProfile = () => {
             showPasswordSection && "border-b"
           } bg-white dark:bg-zinc-900`}
         >
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row gap-4 sm:gap-0 items-start sm:items-center justify-between">
             <div className="flex items-center gap-3">
               <Key className="w-6 h-6 text-zinc-400" />
               <div>
@@ -298,13 +435,13 @@ const MyProfile = () => {
               </div>
             </div>
             <Button
-              className="bg-zinc-800 text-white hover:bg-zinc-700 border border-zinc-700"
+              className="bg-zinc-800 text-white hover:bg-zinc-700 self-center sm:self-auto border border-zinc-700"
               onClick={() => setShowPasswordSection(!showPasswordSection)}
             >
               {showPasswordSection ? (
-                <EyeOff className="w-4 h-4 mr-2" />
+                <EyeOff className="w-4 h-4 " />
               ) : (
-                <Eye className="w-4 h-4 mr-2" />
+                <Eye className="w-4 h-4 " />
               )}
               {showPasswordSection ? "Hide" : "Show"}
             </Button>
@@ -359,6 +496,12 @@ const MyProfile = () => {
                   placeholder="Confirm your new password"
                 />
               </div>
+              {error && (
+                <div className="w-full bg-red-100 text-red-700 border border-red-400 rounded-md p-3">
+                  <p className="text-center font-medium break-words">{error}</p>
+                </div>
+              )}
+
               <Button type="submit" className="w-full">
                 <Key className="w-4 h-4 mr-1" />
                 Update Password
@@ -377,7 +520,7 @@ const MyProfile = () => {
               <CardTitle className="text-zinc-900 dark:text-white text-xl">
                 Account Activity
               </CardTitle>
-              <CardDescription className="text-zinc-600 dark:text-zinc-400">
+              <CardDescription className="text-zinc-600 text-xs font-bold dark:text-zinc-400">
                 Recent activity and account timeline
               </CardDescription>
             </div>
@@ -394,7 +537,7 @@ const MyProfile = () => {
                   Profile Last Updated
                 </p>
                 <p className="text-zinc-500 dark:text-zinc-400 text-sm">
-                  281204
+                  {formatDateTime(userData?.profileLastUpdated).date}
                 </p>
               </div>
               <Clock className="w-5 h-5 text-zinc-500 dark:text-zinc-400" />
@@ -408,7 +551,7 @@ const MyProfile = () => {
                   Account Created
                 </p>
                 <p className="text-zinc-500 dark:text-zinc-400 text-sm">
-                  281204
+                  {formatDateTime(userData?.createdAt).date}
                 </p>
               </div>
               <Clock className="w-5 h-5 text-zinc-500 dark:text-zinc-400" />

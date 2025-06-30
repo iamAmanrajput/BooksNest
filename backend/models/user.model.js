@@ -54,6 +54,10 @@ const userSchema = new mongoose.Schema(
         default: [],
       },
     ],
+    profileLastUpdated: {
+      type: Date,
+      default: Date.now,
+    },
     wishlist: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -75,6 +79,20 @@ userSchema.pre("save", async function (next) {
   } catch (error) {
     next(error);
   }
+});
+
+// update the field profileLastUpdated
+userSchema.pre("save", function (next) {
+  if (
+    this.isModified("fullName") ||
+    this.isModified("email") ||
+    this.isModified("gender") ||
+    this.isModified("profilePic") ||
+    this.isModified("password")
+  ) {
+    this.profileLastUpdated = new Date();
+  }
+  next();
 });
 
 // Compare password method

@@ -8,22 +8,27 @@ import {
   Mail,
   Phone,
   MapPin,
+  BookOpen,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Footer = () => {
+  const navigate = useNavigate();
   return (
-    <footer className="w-full border-t border-zinc-200 dark:border-zinc-700 bg-white dark:bg-[#09090B]">
+    <footer className="w-full border-t border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900">
       {/* Main Footer Content */}
       <div className="px-4 py-10">
         <div className="grid grid-cols-1 md:grid-cols-1 gap-8 lg:gap-12">
           {/* Library Info */}
           <div className="space-y-6">
             <div>
-              <h3 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100 mb-4">
-                BooksNest
+              <h3
+                onClick={() => navigate("/")}
+                className="text-2xl cursor-pointer flex gap-2 items-center font-bold text-zinc-900 dark:text-zinc-100 mb-4"
+              >
+                <BookOpen className="text-customblue" /> <span>BooksNest</span>
               </h3>
-              <p className="text-zinc-700 dark:text-zinc-300 leading-relaxed">
+              <p className="text-zinc-700 text-sm font-bold dark:text-zinc-300 leading-relaxed">
                 Empowering minds through knowledge. Our library offers a wide
                 range of books, journals, and digital resources to support
                 learning and research.
@@ -34,14 +39,17 @@ const Footer = () => {
             <div className="space-y-3">
               <div className="flex items-center space-x-3">
                 <Mail className="h-4 w-4 text-blue-500" />
-                <span className="text-sm text-zinc-700 dark:text-zinc-300">
+                <a
+                  href="mailto:booksnest.app@gmail.com"
+                  className="text-sm text-zinc-700 dark:text-zinc-300"
+                >
                   booksnest.app@gmail.com
-                </span>
+                </a>
               </div>
               <div className="flex items-center space-x-3">
                 <Phone className="h-4 w-4 text-blue-500" />
                 <span className="text-sm text-zinc-700 dark:text-zinc-300">
-                  +91 98765 43210
+                  +91 87007 36093
                 </span>
               </div>
               <div className="flex items-center space-x-3">
@@ -59,11 +67,22 @@ const Footer = () => {
               </h5>
               <div className="flex space-x-3">
                 {[
-                  { icon: Facebook, href: "#", label: "Facebook" },
+                  {
+                    icon: Linkedin,
+                    href: "https://www.linkedin.com/in/aman-kumar-910843327/",
+                    label: "LinkedIn",
+                  },
+                  {
+                    icon: Github,
+                    href: "https://github.com/iamAmanrajput",
+                    label: "GitHub",
+                  },
                   { icon: Twitter, href: "#", label: "Twitter" },
-                  { icon: Instagram, href: "#", label: "Instagram" },
-                  { icon: Linkedin, href: "#", label: "LinkedIn" },
-                  { icon: Github, href: "#", label: "GitHub" },
+                  {
+                    icon: Instagram,
+                    href: "https://www.instagram.com/jaanirajput_0/",
+                    label: "Instagram",
+                  },
                 ].map(({ icon: Icon, href, label }) => (
                   <a
                     key={label}
@@ -88,7 +107,7 @@ const Footer = () => {
       <div className="px-4 py-6">
         <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
           <div className="text-sm text-zinc-700 dark:text-zinc-400">
-            © 2025 Central Library. All rights reserved.
+            © 2025 BooksNest Library. All rights reserved.
           </div>
 
           <div className="flex flex-wrap justify-center md:justify-end gap-4 text-sm">
@@ -98,13 +117,13 @@ const Footer = () => {
               "Library Rules",
               "Help Desk",
             ].map((item) => (
-              <a
+              <Link
                 key={item}
-                href="#"
+                to="#"
                 className="text-zinc-700 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200"
               >
                 {item}
-              </a>
+              </Link>
             ))}
           </div>
         </div>

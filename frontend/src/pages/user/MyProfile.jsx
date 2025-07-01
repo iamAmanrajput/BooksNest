@@ -50,6 +50,9 @@ import {
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useDispatch } from "react-redux";
+import { setUserLogout } from "@/redux/slices/authSlice";
+import { useNavigate } from "react-router-dom";
 
 const MyProfile = () => {
   const [userData, setUserData] = useState(null);
@@ -77,6 +80,8 @@ const MyProfile = () => {
     newPassword: "",
     confirmPassword: "",
   });
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -198,14 +203,12 @@ const MyProfile = () => {
       setLoading((prev) => ({ ...prev, updatePasswordLoading: false }));
       return;
     }
-
     if (newPassword !== confirmPassword) {
       setError("New passwords do not match");
       setLoading((prev) => ({ ...prev, updatePasswordLoading: false }));
       return;
     }
-
-    if (newPassword.length < 6 || confirmPassword.length < 6) {
+    if (newPassword.length < 6) {
       setError("Password must be at least 6 characters long");
       setLoading((prev) => ({ ...prev, updatePasswordLoading: false }));
       return;
@@ -214,7 +217,7 @@ const MyProfile = () => {
     try {
       const response = await axios.patch(
         `${import.meta.env.VITE_BACKEND_URL}/profile/updatePassword`,
-        { currentPassword, newPassword },
+        { currentPassword, newPassword, confirmPassword },
         {
           withCredentials: true,
           headers: {
@@ -225,11 +228,29 @@ const MyProfile = () => {
 
       if (response?.data?.success) {
         toast.success("Password updated successfully");
+
         setPasswords({
           currentPassword: "",
           newPassword: "",
           confirmPassword: "",
         });
+
+        dispatch(setUserLogout());
+
+        try {
+          if (localStorage.getItem("accessToken")) {
+            await axios.get(`${import.meta.env.VITE_BACKEND_URL}/auth/logout`, {
+              withCredentials: true,
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+              },
+            });
+          }
+        } catch (logoutError) {
+          console.error("Logout failed:", logoutError);
+        }
+
+        navigate("/signin");
       }
     } catch (error) {
       console.error("Password update error:", error);
@@ -272,7 +293,7 @@ const MyProfile = () => {
         toast.success("Profile picture updated");
         setUserData((prev) => ({
           ...prev,
-          profilePic: response.data.data.profilePic,
+          profilePic: response.data.data,
         }));
         setIsPicEditModelOpen(false);
         setProfilePicPreview("");

@@ -25,7 +25,7 @@ exports.isLoggedIn = async (req, res, next) => {
     } catch (err) {
       return res.status(401).json({
         success: false,
-        message: "Token is invalid or expired",
+        message: "Session expired. Please login again.",
       });
     }
   } catch (error) {

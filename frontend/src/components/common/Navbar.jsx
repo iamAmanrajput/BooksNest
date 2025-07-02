@@ -25,6 +25,7 @@ const Navbar = () => {
 
   const handleLogout = async () => {
     if (!localStorage.getItem("accessToken")) return navigate("/signin");
+
     try {
       const response = await axios.get(
         `${import.meta.env.VITE_BACKEND_URL}/auth/logout`,
@@ -35,15 +36,15 @@ const Navbar = () => {
           },
         }
       );
-      if (response?.data?.success) {
-        toast.success(response?.data?.message || "Logout Successfully");
-        dispatch(setUserLogout());
-        navigate("/signin");
-      }
+      toast.success(response?.data?.message || "Logout Successfully");
     } catch (error) {
       toast.error(error?.response?.data?.message || "Internal Server Error");
+    } finally {
+      dispatch(setUserLogout());
+      navigate("/signin");
     }
   };
+
   return (
     <nav className="flex h-16 shrink-0 items-center gap-2 border-b border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-4">
       <SidebarTrigger className="-ml-1 cursor-pointer" />

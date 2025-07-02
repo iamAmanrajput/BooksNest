@@ -22,11 +22,7 @@ const AdminRoute = ({ children }) => {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/admin/signin" state={{ from: pathname }} replace />;
-  }
-
-  if (pathname === "/admin/signin") {
-    return <Navigate to="/admin/dashboard" replace />;
+    return <Navigate to="/admin/signin" replace />;
   }
 
   return children;

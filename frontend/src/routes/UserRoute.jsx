@@ -21,13 +21,7 @@ const UserRoute = ({ children }) => {
   }
 
   if (!isAuthenticated) {
-    return (
-      <Navigate to="/signin" state={{ from: location.pathname }} replace />
-    );
-  }
-
-  if (["/signin", "/signup"].includes(pathname)) {
-    return <Navigate to="/" />;
+    return <Navigate to="/signin" replace />;
   }
 
   return children;

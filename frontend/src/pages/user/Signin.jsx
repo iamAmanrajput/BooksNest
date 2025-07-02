@@ -9,72 +9,45 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { BookOpen, Eye, EyeOff } from "lucide-react";
 import ModeToggle from "@/components/common/ModeToggle";
-import axios from "axios";
-import Loader from "@/components/common/Loader";
-import { toast } from "sonner";
 import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
+import { toast } from "sonner";
+import { useDispatch } from "react-redux";
+import { setUserLogin } from "@/redux/slices/authSlice";
+import Loader from "@/components/common/Loader";
 
-const Signup = () => {
+const Signin = () => {
   const [formData, setFormData] = useState({
-    fullName: "",
     email: "",
     password: "",
-    gender: "",
   });
+  const [loading, setLoading] = useState(false);
 
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const handleChange = (e) => {
     setFormData((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
     }));
-
     setErrors((prev) => ({
       ...prev,
       [e.target.name]: "",
     }));
   };
 
-  const handleGenderChange = (value) => {
-    setFormData((prev) => ({
-      ...prev,
-      gender: value,
-    }));
-
-    setErrors((prev) => ({
-      ...prev,
-      gender: "",
-    }));
-  };
-
   const validateForm = () => {
     const newErrors = {};
-
-    if (!formData.fullName.trim()) newErrors.fullName = "Username is required.";
     if (!formData.email.trim()) newErrors.email = "Email is required.";
     else if (!/\S+@\S+\.\S+/.test(formData.email))
       newErrors.email = "Enter a valid email.";
-
     if (!formData.password.trim()) newErrors.password = "Password is required.";
-    else if (formData.password.length < 6)
-      newErrors.password = "Password must be at least 6 characters.";
-
-    if (!formData.gender) newErrors.gender = "Gender is required.";
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -85,7 +58,7 @@ const Signup = () => {
     try {
       if (!validateForm()) return;
       const response = await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/auth/register`,
+        `${import.meta.env.VITE_BACKEND_URL}/auth/login`,
         formData,
         {
           withCredentials: true,
@@ -95,14 +68,9 @@ const Signup = () => {
         }
       );
       if (response?.data?.success) {
-        toast.success(response?.data?.message || "User Sign Up Successfully");
-        setFormData({
-          fullName: "",
-          email: "",
-          password: "",
-          gender: "",
-        });
-        navigate("/signin");
+        toast.success(response?.data?.message || "User Sign In Successfully");
+        dispatch(setUserLogin(response?.data));
+        navigate("/");
       } else {
         return toast.error(response?.data?.message || "Internal Server Error");
       }
@@ -116,43 +84,26 @@ const Signup = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-r from-gray-100 to-white dark:from-zinc-900 dark:to-zinc-800 px-4 relative">
-      {/* Mode Toggle Button in Top Right */}
+      {/* Mode Toggle */}
       <div className="absolute top-4 right-4">
         <ModeToggle />
       </div>
 
       <Card className="w-full max-w-md shadow-lg rounded-2xl">
         <CardHeader className="space-y-2">
-          {/* Branding Section */}
           <div className="flex items-center justify-center gap-2">
             <BookOpen className="w-8 h-8 text-customblue" />
             <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100">
               BooksNest
             </h1>
           </div>
-
-          {/* Title Section */}
           <CardTitle className="text-xl text-center">
-            Join Us – Create Your Account
+            Welcome Back – Sign in to Continue
           </CardTitle>
         </CardHeader>
+
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
-            {/* Username */}
-            <div className="grid gap-1.5">
-              <Label htmlFor="fullName">FullName</Label>
-              <Input
-                id="fullName"
-                name="fullName"
-                value={formData.username}
-                onChange={handleChange}
-                placeholder="Enter your fullName"
-              />
-              {errors.fullName && (
-                <span className="text-xs text-red-500">{errors.fullName}</span>
-              )}
-            </div>
-
             {/* Email */}
             <div className="grid gap-1.5">
               <Label htmlFor="email">Email</Label>
@@ -198,36 +149,31 @@ const Signup = () => {
               )}
             </div>
 
-            {/* Gender */}
-            <div className="grid gap-1.5">
-              <Label htmlFor="gender">Gender</Label>
-              <Select onValueChange={handleGenderChange}>
-                <SelectTrigger className="cursor-pointer" id="gender">
-                  <SelectValue placeholder="Select gender" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem className="cursor-pointer" value="male">
-                    Male
-                  </SelectItem>
-                  <SelectItem className="cursor-pointer" value="female">
-                    Female
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-              {errors.gender && (
-                <span className="text-xs text-red-500">{errors.gender}</span>
-              )}
+            {/* Forgot Password */}
+            <div className="text-right">
+              <Link
+                to="/comingsoon"
+                className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+              >
+                Forgot Password?
+              </Link>
             </div>
           </CardContent>
 
           <CardFooter className="flex flex-col gap-2 mt-4">
             <Button type="submit" className="w-full">
-              {loading === true ? <Loader /> : "Sign Up"}
+              {loading === true ? <Loader /> : "Sign In"}
             </Button>
             <p className="text-xs text-center text-muted-foreground">
-              Already have an account?{" "}
-              <Link to="/signin" className="underline">
-                Sign in
+              Don't have an account?{" "}
+              <Link to="/signup" className="underline">
+                Sign Up
+              </Link>
+            </p>
+            <p className="text-xs text-center text-muted-foreground">
+              Want to Sign in as admin?{" "}
+              <Link to="/admin/signin" className="underline">
+                Click here
               </Link>
             </p>
           </CardFooter>
@@ -237,4 +183,4 @@ const Signup = () => {
   );
 };
 
-export default Signup;
+export default Signin;

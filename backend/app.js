@@ -12,6 +12,12 @@ dbConnect();
 const { cloudinaryConnect } = require("./config/cloudinary");
 cloudinaryConnect();
 
+// Cron Jobs
+const startDueReminderJob = require("./jobs/dueReminderJob");
+const startOverdueReminderJob = require("./jobs/overdueReminderJob");
+startDueReminderJob();
+startOverdueReminderJob();
+
 const fileUpload = require("express-fileupload");
 
 const cookieParser = require("cookie-parser");

@@ -43,6 +43,7 @@ app.use("/api/v1/profile", require("./routes/profile.routes"));
 app.use("/api/v1/notification", require("./routes/notification.route"));
 
 // Admin - Routes
+app.use("/api/v1/auth", require("./routes/admin.routes"));
 app.use("/api/v1/book", require("./routes/book.routes"));
 app.use("/api/v1/user", require("./routes/user.routes"));
 app.use("/api/v1/borrow", require("./routes/borrow.routes"));

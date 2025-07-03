@@ -3,12 +3,30 @@ const jwt = require("jsonwebtoken");
 
 // Register User
 module.exports.register = async (req, res) => {
-  const { fullName, email, password, gender } = req.body;
+  let { fullName, email, password, gender } = req.body;
+
+  fullName = fullName?.trim();
+  email = email?.trim().toLowerCase();
+  gender = gender?.trim().toLowerCase();
 
   if (!fullName || !email || !password || !gender) {
     return res.status(400).json({
       success: false,
       message: "All fields are required",
+    });
+  }
+
+  if (password.length < 6) {
+    return res.status(400).json({
+      success: false,
+      message: "Password must be at least 6 characters long",
+    });
+  }
+
+  if (!["male", "female"].includes(gender)) {
+    return res.status(400).json({
+      success: false,
+      message: "Gender must be either 'male' or 'female'",
     });
   }
 
@@ -23,8 +41,7 @@ module.exports.register = async (req, res) => {
 
     const boyProfilePic = `https://avatar.iran.liara.run/public/boy?username=${fullName}`;
     const girlProfilePic = `https://avatar.iran.liara.run/public/girl?username=${fullName}`;
-    const profilePic =
-      gender.toLowerCase() === "male" ? boyProfilePic : girlProfilePic;
+    const profilePic = gender === "male" ? boyProfilePic : girlProfilePic;
 
     const newUser = await User.create({
       fullName,
@@ -35,9 +52,11 @@ module.exports.register = async (req, res) => {
         imageUrl: profilePic,
       },
     });
-    return res
-      .status(201)
-      .json({ success: true, message: "User Registered Successfully" });
+
+    return res.status(201).json({
+      success: true,
+      message: "User registered successfully",
+    });
   } catch (error) {
     console.error("User Registration Error:", error);
     return res.status(500).json({
@@ -49,19 +68,20 @@ module.exports.register = async (req, res) => {
 
 // Login User
 module.exports.login = async (req, res) => {
-  const { email, password } = req.body;
+  let { email, password } = req.body;
 
-  // Validate input
+  email = email?.trim()?.toLowerCase();
+
   if (!email || !password) {
     return res.status(400).json({
       success: false,
-      message: "All fields are required",
+      message: "Email and password are required",
     });
   }
 
   try {
-    // Check if user exists
     const user = await User.findOne({ email }).select("+password");
+
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -69,31 +89,22 @@ module.exports.login = async (req, res) => {
       });
     }
 
-    // Check if user is blocked
     if (user.isBlocked) {
       return res.status(403).json({
         success: false,
-        message: "Your account is blocked",
+        message: "Your account has been blocked",
       });
     }
 
-    if (user.role === "admin") {
-      return res.status(403).json({
-        success: false,
-        message: "Access Denied, Users Only",
-      });
-    }
-
-    // Validate password
     const isPasswordMatched = await user.comparePassword(password);
+
     if (!isPasswordMatched) {
       return res.status(401).json({
         success: false,
-        message: "Invalid credentials",
+        message: "Invalid email or password",
       });
     }
 
-    // Generate JWT token
     const payload = {
       _id: user._id,
       role: user.role,
@@ -103,10 +114,9 @@ module.exports.login = async (req, res) => {
       expiresIn: "7d",
     });
 
-    // Set token in HTTP-only cookie
     res.cookie("accessToken", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // Use true in production
+      secure: process.env.NODE_ENV === "production",
       sameSite: "Lax",
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
@@ -129,7 +139,7 @@ module.exports.login = async (req, res) => {
     console.error("Login Error:", error);
     return res.status(500).json({
       success: false,
-      message: "Something went wrong. Please try again later.",
+      message: "Internal server error. Please try again later.",
     });
   }
 };

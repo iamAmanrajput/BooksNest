@@ -11,16 +11,24 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Eye, EyeOff } from "lucide-react";
 import ModeToggle from "@/components/common/ModeToggle";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
+import Loader from "@/components/common/Loader";
+import { useDispatch } from "react-redux";
+import { setUserLogin } from "@/redux/slices/authSlice";
+import { toast } from "sonner";
 
 const AdminSignin = () => {
   const [form, setForm] = useState({
-    email: "",
+    userName: "",
     password: "",
   });
 
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setForm((prev) => ({
@@ -35,19 +43,40 @@ const AdminSignin = () => {
 
   const validateForm = () => {
     const newErrors = {};
-    if (!form.email.trim()) newErrors.email = "Email is required.";
-    else if (!/\S+@\S+\.\S+/.test(form.email))
-      newErrors.email = "Enter a valid email.";
+    if (!form.userName.trim()) newErrors.userName = "Usernamme is required.";
     if (!form.password.trim()) newErrors.password = "Password is required.";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validateForm()) return;
-    console.log("Admin Login Data:", form);
-    // API call for admin login
+    setLoading(true);
+    try {
+      if (!validateForm()) return;
+      const response = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/auth/admin/signin`,
+        form,
+        {
+          withCredentials: true,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (response?.data?.success) {
+        toast.success(response?.data?.message || "User Sign In Successfully");
+        dispatch(setUserLogin(response?.data));
+        navigate("/admin/dashboard");
+      } else {
+        return toast.error(response?.data?.message || "Internal Server Error");
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error(error?.response?.data?.message || "Internal Server Error");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -76,17 +105,17 @@ const AdminSignin = () => {
           <CardContent className="space-y-4">
             {/* Email */}
             <div className="grid gap-1.5">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="userName">UserName</Label>
               <Input
-                id="email"
-                name="email"
-                type="email"
-                value={form.email}
+                id="userName"
+                name="userName"
+                type="text"
+                value={form.userName}
                 onChange={handleChange}
-                placeholder="Enter admin email"
+                placeholder="Enter admin userName"
               />
-              {errors.email && (
-                <span className="text-xs text-red-500">{errors.email}</span>
+              {errors.userName && (
+                <span className="text-xs text-red-500">{errors.userName}</span>
               )}
             </div>
 
@@ -122,7 +151,7 @@ const AdminSignin = () => {
 
           <CardFooter className="flex flex-col gap-2 mt-4">
             <Button type="submit" className="w-full">
-              Login as Admin
+              {loading ? <Loader /> : "Sign in as Admin"}
             </Button>
 
             {/* Forgot password */}

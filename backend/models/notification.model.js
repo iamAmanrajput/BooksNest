@@ -17,6 +17,7 @@ const notificationSchema = new mongoose.Schema(
         "queue_reminder", // 2 din pehle reminder
         "request_approved", // book issued by admin / book returned by admin
         "request_rejected", // request rejected
+        "overdue_alert",
       ],
       required: true,
     },

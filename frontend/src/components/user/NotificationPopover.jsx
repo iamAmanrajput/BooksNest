@@ -5,6 +5,7 @@ import {
 } from "@/components/ui/popover";
 import {
   AlarmClock,
+  AlertTriangle,
   Bell,
   BookOpen,
   CalendarClock,
@@ -90,6 +91,11 @@ const NotificationPopOver = () => {
       type: "request_rejected",
       icon: XCircle,
       color: "text-rose-500",
+    },
+    {
+      type: "overdue_alert",
+      icon: AlertTriangle,
+      color: "text-orange-500",
     },
   ];
 

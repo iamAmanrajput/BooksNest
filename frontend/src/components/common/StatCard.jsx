@@ -23,6 +23,16 @@ const colorStyles = {
     bg: "bg-orange-100",
     text: "text-orange-600",
   },
+  yellow: {
+    border: "border-yellow-500",
+    bg: "bg-yellow-100",
+    text: "text-yellow-600",
+  },
+  cyan: {
+    border: "border-cyan-500",
+    bg: "bg-cyan-100",
+    text: "text-cyan-600",
+  },
   // Add more colors as needed
 };
 

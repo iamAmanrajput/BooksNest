@@ -13,6 +13,9 @@ import MyProfile from "./pages/user/MyProfile";
 import UserRoute from "./routes/UserRoute";
 import GuestRoute from "./routes/GuestRoute";
 import AdminSignin from "./pages/admin/AdminSignin";
+import AdminRoute from "./routes/AdminRoute";
+import Dashboard from "./pages/admin/Dashboard";
+import AdminLayout from "./layouts/AdminLayout";
 
 const App = () => {
   return (
@@ -99,6 +102,17 @@ const App = () => {
             </GuestRoute>
           }
         />
+        <Route
+          path="/admin/dashboard"
+          element={
+            <AdminRoute>
+              <AdminLayout>
+                <Dashboard />
+              </AdminLayout>
+            </AdminRoute>
+          }
+        />
+
         <Route path="/comingsoon" element={<FeatureComingSoon />} />
         <Route path="*" element={<PageNotFound />} />
       </Routes>

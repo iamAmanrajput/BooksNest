@@ -1,4 +1,4 @@
-const BorrowRecord = require("../models/BorrowRecord");
+const BorrowRecord = require("../models/borrowRecord.model");
 
 // Utility function to strip time (0:00:00) from date
 const getStartOfDay = (date) => {

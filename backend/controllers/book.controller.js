@@ -1,5 +1,6 @@
 const Book = require("../models/book.model");
 const User = require("../models/user.model");
+const BorrowRecord = require("../models/borrowRecord.model");
 const { uploadImageToCloudinary } = require("../utils/imageUploader");
 const dotenv = require("dotenv");
 dotenv.config();
@@ -233,13 +234,14 @@ exports.updateBook = async (req, res) => {
 
 // get featured Book
 exports.getFeaturedBooks = async (req, res) => {
+  const limit = parseInt(req.query.limit) || 10;
   try {
     const books = await Book.find()
       .select(
         "title description availableQuantity authors genres language rating coverImage"
       )
       .sort({ rating: -1 })
-      .limit(10);
+      .limit(limit);
 
     if (!books || books.length === 0) {
       return res
@@ -255,5 +257,49 @@ exports.getFeaturedBooks = async (req, res) => {
     return res
       .status(500)
       .json({ success: false, message: "Server Error", error: error.message });
+  }
+};
+
+// get stats of fetch totalBooks, availableBooks, total borrowings, overdueBooks
+exports.getOverviewStats = async (req, res) => {
+  try {
+    const [bookStats, issuedBooks, overdueBooks] = await Promise.all([
+      Book.aggregate([
+        {
+          $group: {
+            _id: null,
+            totalQuantity: { $sum: "$quantity" },
+            availableBooks: { $sum: "$availableQuantity" },
+          },
+        },
+      ]),
+      BorrowRecord.countDocuments({
+        status: { $in: ["issued", "return_requested"] },
+      }),
+      BorrowRecord.countDocuments({
+        dueDate: { $lt: new Date() },
+        status: "issued",
+      }),
+    ]);
+
+    const stats = {
+      totalBooks: bookStats[0]?.totalQuantity || 0,
+      availableBooks: bookStats[0]?.availableBooks || 0,
+      issuedBooks,
+      overdueBooks,
+    };
+
+    res.status(200).json({
+      success: true,
+      message: "Overview stats fetched successfully",
+      data: stats,
+    });
+  } catch (error) {
+    console.error("Error fetching overview stats:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch overview stats",
+      error: error.message,
+    });
   }
 };

@@ -1,4 +1,5 @@
 const User = require("../models/user.model");
+const BorrowRecord = require("../models/borrowRecord.model");
 
 // Get All Users -- Admin
 exports.getAllUsers = async (req, res) => {
@@ -102,6 +103,36 @@ exports.changeAccountStatus = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Something went wrong",
+    });
+  }
+};
+
+// get recent activity by user
+exports.recentActivities = async (req, res) => {
+  try {
+    const records = await BorrowRecord.find({})
+      .select("status updatedAt")
+      .populate({
+        path: "userId",
+        select: "profilePic fullName",
+      })
+      .populate({
+        path: "bookId",
+        select: "title",
+      })
+      .sort({ updatedAt: -1 })
+      .limit(5)
+      .lean();
+
+    res.status(200).json({
+      success: true,
+      data: records,
+    });
+  } catch (error) {
+    console.error("Error fetching recent activities:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to fetch recent activities",
     });
   }
 };

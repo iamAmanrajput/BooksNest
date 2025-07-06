@@ -44,7 +44,7 @@ exports.commonEmailTemplate = (message) => {
 
     .text-bold {
       font-weight: 600;
-      color: #facc15;
+      color: #a1a1aa;
     }
 
     .footer {

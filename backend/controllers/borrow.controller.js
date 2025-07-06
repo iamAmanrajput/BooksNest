@@ -401,6 +401,7 @@ exports.renewBook = async (req, res) => {
   try {
     const { requestId } = req.params;
 
+    // 1. Find borrow record and populate user and book
     const record = await BorrowRecord.findById(requestId).populate(
       "userId bookId"
     );
@@ -412,6 +413,7 @@ exports.renewBook = async (req, res) => {
       });
     }
 
+    // 2. Check if book is issued
     if (record.status !== "issued") {
       return res.status(400).json({
         success: false,
@@ -419,6 +421,7 @@ exports.renewBook = async (req, res) => {
       });
     }
 
+    // 3. Check renew limit
     if (record.renewCount >= 2) {
       return res.status(400).json({
         success: false,
@@ -427,10 +430,9 @@ exports.renewBook = async (req, res) => {
       });
     }
 
+    // 4. Check if any queue exists for the book
     const queue = await BookQueue.findOne({ book: record.bookId._id });
-
-    // If queue exists and has users, renewal not allowed
-    if (queue && queue.queue && queue.queue.length > 0) {
+    if (queue?.queue?.length > 0) {
       return res.status(400).json({
         success: false,
         message:
@@ -438,26 +440,19 @@ exports.renewBook = async (req, res) => {
       });
     }
 
-    // Fine Calculation + Early Renew Block
+    // 5. Calculate fine
     const today = new Date();
-    const due = new Date(record.dueDate);
-
-    // Prevent early renewals
-    if (today <= due) {
-      return res.status(400).json({
-        success: false,
-        message: "You can only renew this book after its due date has passed.",
-      });
-    }
-
-    // Fine calculation
+    const previousDueDate = new Date(record.dueDate);
     let fine = 0;
-    const lateDays = Math.ceil((today - due) / (1000 * 60 * 60 * 24));
-    fine = lateDays * 5;
-    record.fine = (record.fine || 0) + fine;
 
-    // Update user fineAmount and send fine notification
-    if (fine > 0) {
+    if (today > previousDueDate) {
+      const lateDays = Math.ceil(
+        (today - previousDueDate) / (1000 * 60 * 60 * 24)
+      );
+      fine = lateDays * 5;
+      record.fine = (record.fine || 0) + fine;
+
+      // Update user's fine and send fine notification
       await Promise.all([
         User.findByIdAndUpdate(record.userId._id, {
           $inc: { fineAmount: fine },
@@ -466,20 +461,20 @@ exports.renewBook = async (req, res) => {
           user: record.userId._id,
           type: "fine_alert",
           title: "Overdue Fine Applied",
-          message: `Your book '${record.bookId.title}' was returned late. A fine of ₹${fine} has been added to your account.`,
+          message: `Your book '${record.bookId.title}' was overdue. A fine of ₹${fine} has been added to your account.`,
         }),
       ]);
     }
 
-    // Renew the book
+    // 6. Update renewal count and extend due date by 7 days
     record.renewCount += 1;
     record.lastRenewedAt = new Date();
 
-    // Extend due date by 7 days
     const newDueDate = new Date();
     newDueDate.setDate(newDueDate.getDate() + 7);
     record.dueDate = newDueDate;
 
+    // 7. Save record and send email
     await Promise.all([
       record.save(),
       mailSender(
@@ -488,7 +483,7 @@ exports.renewBook = async (req, res) => {
         commonEmailTemplate(
           `Hello ${record.userId.fullName},<br><br>Your book <b>${
             record.bookId.title
-          }</b> has been successfully renewed. Your new due date is <b>${newDueDate.toDateString()}</b>. Please return or renew it before the due date to avoid fines.`
+          }</b> has been successfully renewed. Your new due date is <b>${newDueDate.toDateString()}</b>.<br><br>Please return or renew it before the due date to avoid fines.`
         )
       ),
     ]);

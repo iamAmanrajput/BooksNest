@@ -517,55 +517,82 @@ exports.getBorrowHistory = async (req, res) => {
 
     const skip = (page - 1) * limit;
 
-    let query = { userId };
+    // Build query
+    const query = { userId };
 
-    // Overdue logic
     if (status === "overdue") {
       query.status = "issued";
       query.dueDate = { $lt: new Date() };
-    } else if (status) {
+    } else if (status && status !== "all") {
       query.status = status;
     }
 
+    // Fetch paginated records and total count
     const [totalRecord, borrowRecords] = await Promise.all([
       BorrowRecord.countDocuments(query),
       BorrowRecord.find(query)
         .populate({ path: "bookId", select: "title authors coverImage" })
         .skip(skip)
         .limit(limit)
-        .sort({ updatedAt: -1 }),
+        .sort({ updatedAt: -1 })
+        .lean(),
     ]);
 
-    // Add Queue Position & Fine Calculation
-    for (let i = 0; i < borrowRecords.length; i++) {
-      const record = borrowRecords[i];
+    const now = new Date();
 
-      // Queue Position
-      if (record.status === "queued") {
-        const bookQueue = await BookQueue.findOne({ book: record.bookId });
-        const userEntry = bookQueue?.queue.find(
-          (q) => q.user.toString() === userId.toString()
-        );
-        record._doc.queuePosition = userEntry?.position || null;
-      }
+    // Get all queued bookIds
+    const queuedBookIds = borrowRecords
+      .filter((record) => record.status === "queued" && record.bookId?._id)
+      .map((record) => record.bookId._id.toString());
 
-      // Fine Calculation for overdue
-      if (
-        record.status === "issued" &&
-        record.dueDate &&
-        record.dueDate < new Date()
-      ) {
-        const overdueDays = Math.floor(
-          (new Date() - new Date(record.dueDate)) / (1000 * 60 * 60 * 24)
-        );
-        const calculatedFine = overdueDays * PER_DAY_FINE;
-        record._doc.fine = calculatedFine;
-      }
+    let bookQueueMap = {};
+
+    //  Bulk fetch all relevant book queues
+    if (queuedBookIds.length > 0) {
+      const bookQueues = await BookQueue.find({
+        book: { $in: queuedBookIds },
+      }).lean();
+
+      // Convert to map
+      bookQueues.forEach((queueDoc) => {
+        bookQueueMap[queueDoc.book.toString()] = queueDoc.queue;
+      });
     }
 
+    // Add fine and queuePosition to each record
+    const enhancedRecords = borrowRecords.map((record) => {
+      // Clone record
+      const updatedRecord = { ...record };
+
+      // Fine Calculation
+      if (
+        updatedRecord.status === "issued" &&
+        updatedRecord.dueDate &&
+        new Date(updatedRecord.dueDate) < now
+      ) {
+        const overdueDays = Math.floor(
+          (now - new Date(updatedRecord.dueDate)) / (1000 * 60 * 60 * 24)
+        );
+        updatedRecord.fine = overdueDays * PER_DAY_FINE;
+        updatedRecord.status = "overdue";
+      }
+
+      // Queue Position Calculation
+      if (updatedRecord.status === "queued" && updatedRecord.bookId?._id) {
+        const queue = bookQueueMap[updatedRecord.bookId._id.toString()] || [];
+        const userEntry = queue.find(
+          (entry) => entry.user.toString() === userId.toString()
+        );
+        updatedRecord.queuePosition = userEntry?.position || null;
+      }
+
+      return updatedRecord;
+    });
+
+    // Step 6: Return final response
     return res.status(200).json({
       success: true,
-      data: borrowRecords,
+      data: enhancedRecords,
       pagination: {
         totalRecord,
         currentPage: page,
@@ -574,6 +601,7 @@ exports.getBorrowHistory = async (req, res) => {
       },
     });
   } catch (error) {
+    console.error("Error in getBorrowHistory:", error);
     return res.status(500).json({
       success: false,
       message: "Failed to fetch borrow history",

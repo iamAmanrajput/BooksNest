@@ -23,7 +23,8 @@ const BorrowRecordCard = ({
   coverImage,
   dueDate,
   returnDate,
-  fineAmount,
+  fine,
+  isRenewed,
   queuePosition,
   onRenew,
   onReturn,
@@ -45,12 +46,7 @@ const BorrowRecordCard = ({
       case "queued":
         return <Badge variant="secondary">Queued</Badge>;
       case "overdue":
-        return (
-          <>
-            <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400" />
-            <Badge variant="destructive">Overdue</Badge>
-          </>
-        );
+        return <Badge variant="destructive">Overdue</Badge>;
       default:
         return null;
     }
@@ -81,7 +77,13 @@ const BorrowRecordCard = ({
           </div>
 
           {/* Status Badge */}
-          <div className="flex items-center gap-2">{renderBadge()}</div>
+          {isRenewed ? (
+            <div className="flex items-center gap-2">
+              <Badge variant="primary">Renewed</Badge>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">{renderBadge()}</div>
+          )}
         </div>
       </CardHeader>
 
@@ -90,7 +92,9 @@ const BorrowRecordCard = ({
         {!["pending", "queued", "rejected"].includes(status) && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
             {/* issued date */}
-            {["issued", "returned", "return_requested"].includes(status) && (
+            {["issued", "returned", "return_requested", "overdue"].includes(
+              status
+            ) && (
               <div className="flex items-center text-sm">
                 <CalendarDays className="h-4 w-4 mr-2 text-muted-foreground" />
                 <div>
@@ -101,7 +105,9 @@ const BorrowRecordCard = ({
             )}
 
             {/* due date */}
-            {["issued", "returned", "return_requested"].includes(status) && (
+            {["issued", "returned", "return_requested", "overdue"].includes(
+              status
+            ) && (
               <div className="flex items-center text-sm">
                 <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
                 <div>
@@ -155,14 +161,14 @@ const BorrowRecordCard = ({
         )}
 
         {/* Fine */}
-        {(status === "returned" || status === "overdue") && fineAmount > 0 && (
+        {(status === "returned" || status === "overdue") && fine > 0 && (
           <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg p-3 mb-4">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium text-red-800 dark:text-red-200">
                 Fine Amount:
               </span>
               <span className="text-lg font-bold text-red-600 dark:text-red-400">
-                ₹{fineAmount}
+                ₹{fine}
               </span>
             </div>
           </div>

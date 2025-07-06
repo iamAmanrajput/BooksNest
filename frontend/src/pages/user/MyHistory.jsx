@@ -243,7 +243,9 @@ const MyHistory = () => {
                 title={record?.bookId?.title}
                 coverImage={record?.bookId?.coverImage?.imageUrl}
                 author={record?.bookId?.authors?.[0] || "Unknown"}
-                isRenewed={record?.renewCount >= 1 ? true : false}
+                isRenewed={
+                  record?.renewCount >= 1 && record?.status !== "returned"
+                }
                 status={record.status}
                 issueDate={
                   record.issueDate ? formatDateTime(record.issueDate).date : ""

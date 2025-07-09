@@ -21,6 +21,7 @@ import axios from "axios";
 import { FileQuestion } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { getPaginationRange } from "@/constants/Helper";
 
 const MyHistory = () => {
   const [borrowRecord, setBorrowRecord] = useState([]);
@@ -78,27 +79,6 @@ const MyHistory = () => {
   useEffect(() => {
     fetchBorrowRecord(1);
   }, [status]);
-
-  // Generate page numbers with ellipsis
-  const getPaginationRange = (currentPage, totalPages) => {
-    const range = [];
-
-    if (currentPage > 2) {
-      range.push(1);
-      if (currentPage > 3) range.push("start-ellipsis");
-    }
-
-    if (currentPage > 1) range.push(currentPage - 1);
-    range.push(currentPage);
-    if (currentPage < totalPages) range.push(currentPage + 1);
-
-    if (currentPage < totalPages - 1) {
-      if (currentPage < totalPages - 2) range.push("end-ellipsis");
-      range.push(totalPages);
-    }
-
-    return range;
-  };
 
   // Handle return request
   const handleReturn = async (id) => {

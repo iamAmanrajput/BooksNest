@@ -21,6 +21,8 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { genreData } from "@/constants/Helper";
+import { getPaginationRange } from "@/constants/Helper";
 
 const AllBooks = () => {
   const [search, setSearch] = useState("");
@@ -73,95 +75,6 @@ const AllBooks = () => {
   useEffect(() => {
     fetchBooks(1);
   }, [search, genre, language, availability]);
-
-  // get pagination range for pagination
-  const getPaginationRange = (currentPage, totalPages) => {
-    const range = [];
-
-    // Always show first page
-    if (currentPage > 2) {
-      range.push(1);
-      if (currentPage > 3) range.push("start-ellipsis");
-    }
-
-    // Always show current page
-    if (currentPage > 1) range.push(currentPage - 1);
-    range.push(currentPage);
-    if (currentPage < totalPages) range.push(currentPage + 1);
-
-    // Always show last page
-    if (currentPage < totalPages - 1) {
-      if (currentPage < totalPages - 2) range.push("end-ellipsis");
-      range.push(totalPages);
-    }
-
-    return range;
-  };
-
-  const genreData = {
-    trigger: "Genre",
-    items: [
-      // Fiction
-      "Fantasy",
-      "Science Fiction",
-      "Mystery",
-      "Thriller",
-      "Horror",
-      "Romance",
-      "Historical Fiction",
-      "Adventure",
-      "Drama",
-      "Dystopian",
-      "Young Adult",
-      "Children",
-      "Graphic Novel",
-      "Mythology",
-      "Satire",
-      "Short Stories",
-
-      // Non-Fiction
-      "Biography",
-      "Autobiography",
-      "Memoir",
-      "History",
-      "Science",
-      "Self-Help",
-      "Psychology",
-      "Philosophy",
-      "Religion",
-      "Politics",
-      "Business",
-      "Economics",
-      "Technology",
-      "Education",
-      "Travel",
-      "Health",
-      "Art",
-      "Photography",
-      "Law",
-      "Cooking",
-      "Parenting",
-      "Language",
-
-      // Academic
-      "Mathematics",
-      "Physics",
-      "Chemistry",
-      "Biology",
-      "Computer Science",
-      "Engineering",
-      "Medical",
-      "Environmental Studies",
-      "Sociology",
-      "Anthropology",
-      "Literature",
-      "Statistics",
-      "Civics",
-      "Geography",
-      "Accountancy",
-      "Commerce",
-    ],
-  };
 
   const languageData = {
     trigger: "Language",

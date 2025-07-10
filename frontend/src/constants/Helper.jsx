@@ -101,6 +101,11 @@ export const genreData = {
   ],
 };
 
+export const languageData = {
+  trigger: "Language",
+  items: ["English", "Hindi", "French", "Spanish", "German"],
+};
+
 // get pagination range for pagination
 export const getPaginationRange = (currentPage, totalPages) => {
   const range = [];

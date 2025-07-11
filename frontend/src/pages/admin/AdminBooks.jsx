@@ -49,6 +49,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import IssueBookDialog from "@/components/admin/Books/IssueBookDialog";
 
 const AdminBooks = () => {
   const [search, setSearch] = useState("");
@@ -257,6 +258,23 @@ const AdminBooks = () => {
     } finally {
       setLoading((prev) => ({ ...prev, createBookLoading: false }));
     }
+  };
+
+  // update availableQuantity after issue book
+  const updateAvailableQuantity = (id) => {
+    setBooks((prev) =>
+      prev.map((book) =>
+        book._id === id
+          ? {
+              ...book,
+              availableQuantity:
+                book.availableQuantity > 0
+                  ? book.availableQuantity - 1
+                  : book.availableQuantity,
+            }
+          : book
+      )
+    );
   };
 
   // Fetch books from API
@@ -492,10 +510,11 @@ const AdminBooks = () => {
                     <Pencil className="h-4 w-4 mr-1" />
                     Edit
                   </Button>
-                  <Button className="flex-1" variant="default">
-                    <Send className="h-4 w-4 mr-1" />
-                    Issue
-                  </Button>
+                  {/* issue Book Dialog */}
+                  <IssueBookDialog
+                    onQuantityUpdate={updateAvailableQuantity}
+                    bookDetails={book}
+                  />
                   <Button className="flex-1" variant="destructive">
                     <Trash2 className="h-4 w-4 mr-1" />
                     Delete

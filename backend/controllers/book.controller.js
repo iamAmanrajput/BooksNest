@@ -70,7 +70,11 @@ exports.createBook = async (req, res) => {
 
     return res
       .status(201)
-      .json({ success: true, message: "Book Created Successfully", newBook });
+      .json({
+        success: true,
+        message: "Book Created Successfully",
+        data: newBook,
+      });
   } catch (error) {
     console.log("CreateBook Error : ", error);
     return res.status(500).json({

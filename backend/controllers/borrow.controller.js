@@ -501,6 +501,146 @@ exports.renewBook = async (req, res) => {
   }
 };
 
+// issue book using email --Admin
+exports.issueBookUsingEmail = async (req, res) => {
+  try {
+    let { bookId, email } = req.body;
+
+    if (!email?.trim() || !bookId?.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required",
+      });
+    }
+
+    email = email.trim().toLowerCase();
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    const checkingRecord = await BorrowRecord.findOne({
+      bookId,
+      userId: user._id,
+      status: {
+        $in: ["pending", "issued", "return_requested", "queued"],
+      },
+    });
+
+    if (checkingRecord) {
+      const statusMessages = {
+        pending: "User has already requested to borrow this book.",
+        issued: "This book is already issued to the user.",
+        return_requested:
+          "Return request is already pending for this book. Please wait before requesting again.",
+        queued: "User is already in the queue for this book.",
+      };
+
+      return res.status(400).json({
+        success: false,
+        message: statusMessages[checkingRecord.status] || "Invalid status",
+      });
+    }
+
+    const book = await Book.findById(bookId);
+    if (!book) {
+      return res.status(404).json({
+        success: false,
+        message: "Book not found",
+      });
+    }
+
+    // Book not available
+    if (book.availableQuantity <= 0) {
+      let existingQueue = await BookQueue.findOne({ book: book._id });
+
+      if (!existingQueue) {
+        existingQueue = await BookQueue.create({ book: book._id, queue: [] });
+      }
+
+      const alreadyInQueue = existingQueue.queue.find(
+        (entry) => entry.user.toString() === user._id.toString()
+      );
+
+      if (alreadyInQueue) {
+        return res.status(400).json({
+          success: false,
+          message: "User is already in the queue for this book.",
+        });
+      }
+
+      const position = existingQueue.queue.length + 1;
+      existingQueue.queue.push({ user: user._id, position });
+
+      await Promise.all([
+        existingQueue.save(),
+        Notification.create({
+          user: user._id,
+          type: "queue_notification",
+          title: "Added to Queue",
+          message: `You have been added to the queue for '${book.title}'. Your current position is ${position}.`,
+        }),
+        mailSender(
+          user.email,
+          "Added to Book Queue",
+          addQueueEmailTemplate(user.fullName, book.title, position)
+        ),
+      ]);
+
+      return res.status(200).json({
+        success: true,
+        message: `User added to the queue. Current position: ${position}.`,
+      });
+    }
+
+    // Book is available
+    book.availableQuantity--;
+
+    await Promise.all([
+      book.save(),
+      BorrowRecord.create({
+        userId: user._id,
+        bookId: book._id,
+        status: "issued",
+        issueDate: Date.now(),
+        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+      }),
+      Notification.create({
+        user: user._id,
+        type: "request_approved",
+        title: "Book Issued",
+        message: `'${book.title}' has been successfully issued to you by the admin.`,
+      }),
+      mailSender(
+        user.email,
+        "Book Issued Successfully",
+        commonEmailTemplate(
+          `Dear ${user.fullName},Your requested book '${
+            book.title
+          }' has been successfully issued.<br>Due Date:</b> ${new Date(
+            Date.now() + 7 * 24 * 60 * 60 * 1000
+          ).toLocaleDateString()}<br><br>Please make sure to return it before the due date.`
+        )
+      ),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      message: "Book issued successfully.",
+    });
+  } catch (error) {
+    console.error("Issue book error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
 // get BorrowHistory
 const PER_DAY_FINE = 5;
 exports.getBorrowHistory = async (req, res) => {

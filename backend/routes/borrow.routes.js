@@ -8,6 +8,7 @@ const {
   handleReturnRequest,
   renewBook,
   getBorrowHistory,
+  issueBookUsingEmail,
 } = require("../controllers/borrow.controller");
 
 const { isLoggedIn, isAdmin } = require("../middlewares/verifyToken");
@@ -27,6 +28,9 @@ router.get("/send/returnRequest/:requestId", isLoggedIn, sendReturnRequest);
 router.patch("/send/renewRequest/:requestId", isLoggedIn, renewBook);
 
 // ADMIN ROUTES
+
+// Issue Book Using Email
+router.post("/issueBook", isLoggedIn, isAdmin, issueBookUsingEmail);
 
 // Handle borrow request
 router.patch(

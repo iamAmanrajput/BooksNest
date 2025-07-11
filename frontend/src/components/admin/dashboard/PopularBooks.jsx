@@ -15,7 +15,7 @@ const PopularBooks = () => {
       setLoading(true);
       try {
         const response = await axios.get(
-          `${import.meta.env.VITE_BACKEND_URL}/book/featuredBook?limit="5"`,
+          `${import.meta.env.VITE_BACKEND_URL}/book/featuredBook?limit=5`,
           {
             withCredentials: true,
             headers: {

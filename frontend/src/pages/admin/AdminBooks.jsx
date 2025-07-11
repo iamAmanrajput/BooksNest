@@ -50,6 +50,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import IssueBookDialog from "@/components/admin/Books/IssueBookDialog";
+import EditBookDialog from "@/components/admin/Books/EditBookDialog";
 
 const AdminBooks = () => {
   const [search, setSearch] = useState("");
@@ -274,6 +275,13 @@ const AdminBooks = () => {
             }
           : book
       )
+    );
+  };
+
+  // update bookData after edit book
+  const updateBookData = (id, data) => {
+    setBooks((prev) =>
+      prev.map((book) => (book._id === id ? { ...book, ...data } : book))
     );
   };
 
@@ -506,10 +514,11 @@ const AdminBooks = () => {
                 </div>
 
                 <CardFooter className="flex justify-between gap-2">
-                  <Button className="flex-1" variant="outline">
-                    <Pencil className="h-4 w-4 mr-1" />
-                    Edit
-                  </Button>
+                  {/* Edit Dialog Box */}
+                  <EditBookDialog
+                    bookDetails={book}
+                    onUpdateBookData={updateBookData}
+                  />
                   {/* issue Book Dialog */}
                   <IssueBookDialog
                     onQuantityUpdate={updateAvailableQuantity}

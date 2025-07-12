@@ -21,6 +21,6 @@ router.get("/overviewStats", isLoggedIn, isAdmin, getOverviewStats);
 
 router.get("/:bookId", isLoggedIn, getBookbyId);
 
-router.patch("/updateBook/:id", isLoggedIn, isAdmin, updateBook);
+router.patch("/update", isLoggedIn, isAdmin, updateBook);
 
 module.exports = router;

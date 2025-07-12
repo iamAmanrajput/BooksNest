@@ -2,6 +2,7 @@ const Book = require("../models/book.model");
 const User = require("../models/user.model");
 const BorrowRecord = require("../models/borrowRecord.model");
 const { uploadImageToCloudinary } = require("../utils/imageUploader");
+const cloudinary = require("cloudinary").v2;
 const dotenv = require("dotenv");
 dotenv.config();
 
@@ -180,44 +181,84 @@ exports.getBooks = async (req, res) => {
 
 // update Book
 exports.updateBook = async (req, res) => {
-  const { id: bookId } = req.params;
+  const {
+    title,
+    description,
+    quantity,
+    authors,
+    genres,
+    keywords,
+    language,
+    bookId,
+  } = req.body;
+  const courseImage = req?.files?.image || null;
+
+  let updatedData = {};
+
+  if (title?.trim()) {
+    updatedData.title = title.trim();
+  }
+
+  if (description?.trim()) {
+    updatedData.description = description.trim();
+  }
+
+  if (quantity !== undefined) {
+    const qty = Number(quantity);
+    if (qty < 1) {
+      return res.status(400).json({
+        success: false,
+        message: "Quantity must be 1.",
+      });
+    }
+    updatedData.quantity = qty;
+    updatedData.availableQuantity = qty;
+  }
+
+  if (authors && authors.length !== 0) {
+    updatedData.authors = authors;
+  }
+
+  if (genres && genres.length !== 0) {
+    updatedData.genres = genres;
+  }
+
+  if (keywords && keywords.length !== 0) {
+    updatedData.keywords = keywords;
+  }
+
+  if (language?.trim()) {
+    updatedData.language = language.trim();
+  }
+
   try {
-    const {
-      title,
-      description,
-      quantity,
-      authors,
-      genres,
-      keywords,
-      language,
-    } = req.body;
-    let updatedData = {};
-    if (title?.trim()) {
-      updatedData.title = title.trim();
-    }
-    if (description?.trim()) {
-      updatedData.description = description.trim();
-    }
-    if (quantity) {
-      updatedData.quantity = Number(quantity);
-      updatedData.availableQuantity = Number(quantity);
+    const book = await Book.findById(bookId);
+    if (!book || book.isDeleted) {
+      return res.status(400).json({
+        success: false,
+        message: "Book Not Found",
+      });
     }
 
-    if (authors && authors.length !== 0) {
-      updatedData.authors = authors;
+    // Handle image update with Promise.all
+    if (courseImage) {
+      const [_, uploadResponse] = await Promise.all([
+        cloudinary.uploader.destroy(book.coverImage.publicId),
+        uploadImageToCloudinary(
+          courseImage,
+          process.env.CLOUD_COVER_IMAGE_FOLDER
+        ),
+      ]);
+
+      updatedData.coverImage = {
+        publicId: uploadResponse.public_id,
+        imageUrl: uploadResponse.secure_url,
+      };
     }
 
-    if (genres && genres.length !== 0) {
-      updatedData.genres = genres;
-    }
-    if (keywords && keywords.length !== 0) {
-      updatedData.keywords = keywords;
-    }
-    if (language?.trim()) {
-      updatedData.language = language.trim();
-    }
     const updatedBook = await Book.findByIdAndUpdate(bookId, updatedData, {
       new: true,
+      runValidators: true,
     });
 
     return res.status(200).json({
@@ -226,7 +267,7 @@ exports.updateBook = async (req, res) => {
       data: updatedBook,
     });
   } catch (error) {
-    console.log("Updating Book Error : ", error);
+    console.error("Updating Book Error: ", error);
     return res.status(500).json({
       success: false,
       message: "Something went wrong. Please try again later.",

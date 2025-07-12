@@ -346,3 +346,96 @@ exports.getOverviewStats = async (req, res) => {
     });
   }
 };
+
+// soft delete book
+exports.softDeleteBook = async (req, res) => {
+  const { bookId } = req.body;
+
+  try {
+    // Check if book exists
+    const book = await Book.findById(bookId);
+    if (!book || book.isDeleted) {
+      return res.status(400).json({
+        success: false,
+        message: "Book Not Found",
+      });
+    }
+
+    // Check for active borrow records
+    const records = await BorrowRecord.find({
+      bookId,
+      status: {
+        $in: ["pending", "issued", "queued"],
+      },
+    });
+
+    if (records.length !== 0) {
+      const messageType = {
+        pending: "Someone has requested this book.",
+        issued: "Someone has already borrowed this book.",
+        queued: "Someone is in queue for this book.",
+      };
+
+      return res.status(400).json({
+        success: false,
+        message:
+          messageType[records[0].status] || "This book is currently in use.",
+      });
+    }
+
+    // Soft delete the book
+    book.isDeleted = true;
+    await book.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Book deleted successfully.",
+    });
+  } catch (error) {
+    console.error("Soft delete book error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong. Please try again later.",
+    });
+  }
+};
+
+// restore soft-deleted book
+exports.restoreBook = async (req, res) => {
+  const { bookId } = req.body;
+
+  try {
+    // Step 1: Find the book
+    const book = await Book.findById(bookId);
+    if (!book) {
+      return res.status(404).json({
+        success: false,
+        message: "Book not found.",
+      });
+    }
+
+    // Step 2: If already restored
+    if (!book.isDeleted) {
+      return res.status(400).json({
+        success: false,
+        message: "Book is already active.",
+      });
+    }
+
+    // Step 3: Restore it
+    book.isDeleted = false;
+    await book.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Book restored successfully.",
+    });
+  } catch (error) {
+    console.error("Restore Book Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong while restoring the book.",
+    });
+  }
+};
+

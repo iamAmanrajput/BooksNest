@@ -165,6 +165,7 @@ const EditBookDialog = ({ bookDetails, onUpdateBookData }) => {
     form.append("description", description);
     form.append("quantity", quantity);
     form.append("language", language);
+    form.append("bookId", bookDetails?._id);
     if (selectedFile) {
       form.append("image", selectedFile);
     }
@@ -432,7 +433,12 @@ const EditBookDialog = ({ bookDetails, onUpdateBookData }) => {
               {error}
             </div>
           )}
-          <Button disabled={loading} type="submit" className="w-full mt-4">
+          <Button
+            disabled={loading}
+            type="submit"
+            onClick={handleSubmit}
+            className="w-full mt-4"
+          >
             {loading ? <Loader /> : "Edit Book"}
           </Button>
         </ScrollArea>

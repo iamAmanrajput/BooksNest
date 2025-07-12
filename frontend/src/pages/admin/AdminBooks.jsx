@@ -515,15 +515,21 @@ const AdminBooks = () => {
 
                 <CardFooter className="flex justify-between gap-2">
                   {/* Edit Dialog Box */}
-                  <EditBookDialog
-                    bookDetails={book}
-                    onUpdateBookData={updateBookData}
-                  />
+                  {!book?.isDeleted && (
+                    <EditBookDialog
+                      bookDetails={book}
+                      onUpdateBookData={updateBookData}
+                    />
+                  )}
+
                   {/* issue Book Dialog */}
-                  <IssueBookDialog
-                    onQuantityUpdate={updateAvailableQuantity}
-                    bookDetails={book}
-                  />
+                  {!book?.isDeleted && (
+                    <IssueBookDialog
+                      onQuantityUpdate={updateAvailableQuantity}
+                      bookDetails={book}
+                    />
+                  )}
+
                   <Button className="flex-1" variant="destructive">
                     <Trash2 className="h-4 w-4 mr-1" />
                     Delete

@@ -18,7 +18,7 @@ exports.sendBorrowRequest = async (req, res) => {
     const bookId = req.params.bookId;
 
     const bookExists = await Book.findById(bookId);
-    if (!bookExists) {
+    if (!bookExists || bookExists.isDeleted) {
       return res.status(404).json({
         success: false,
         message: "Book not found.",
@@ -547,7 +547,7 @@ exports.issueBookUsingEmail = async (req, res) => {
     }
 
     const book = await Book.findById(bookId);
-    if (!book) {
+    if (!book || book.isDeleted) {
       return res.status(404).json({
         success: false,
         message: "Book not found",

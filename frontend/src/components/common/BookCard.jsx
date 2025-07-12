@@ -7,7 +7,7 @@ import {
   CardTitle,
 } from "../ui/card";
 import { Button } from "../ui/button";
-import { Star } from "lucide-react";
+import { Clock, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const BookCard = ({ bookData }) => {
@@ -79,9 +79,11 @@ const BookCard = ({ bookData }) => {
 
         <CardFooter className="flex w-full flex-wrap justify-between items-center gap-3 mt-auto">
           {/* Explore Button */}
-          <Button variant="default" className="rounded-full px-6 order-1">
-            Explore Now
-          </Button>
+          {!bookData?.isDeleted && (
+            <Button variant="default" className="rounded-full px-6 order-1">
+              Explore Now
+            </Button>
+          )}
 
           {/* Rating */}
           <div className="order-2 flex items-center gap-1 text-yellow-500 mx-auto">
@@ -93,10 +95,20 @@ const BookCard = ({ bookData }) => {
 
           {/* Quantity */}
           <div className="order-3 text-sm text-zinc-700 dark:text-zinc-300 ml-auto">
-            <span className="font-medium">Available:</span>{" "}
-            <span className="text-customYellow">
-              {bookData?.availableQuantity}
-            </span>
+            {bookData?.isDeleted ? (
+              <div className="flex items-center gap-2 text-customGray">
+                <Clock className="w-5 h-5" />
+                <span className="font-bold text-xl">Coming Soon</span>
+              </div>
+            ) : (
+              <>
+                {" "}
+                <span className="font-medium">Available:</span>{" "}
+                <span className="text-customYellow">
+                  {bookData?.availableQuantity}
+                </span>
+              </>
+            )}
           </div>
         </CardFooter>
       </div>

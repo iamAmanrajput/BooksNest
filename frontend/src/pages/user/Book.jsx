@@ -1,6 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { starGenerator } from "@/constants/Helper";
-import { CheckCircle, Delete, MessageSquare, Plus, User } from "lucide-react";
+import {
+  CheckCircle,
+  Clock,
+  Delete,
+  MessageSquare,
+  Plus,
+  User,
+} from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -164,25 +171,27 @@ const Book = () => {
           </div>
 
           {/* Availability */}
-          <Alert
-            className={`border-l-4 ${
-              availabilityStatus === "Available"
-                ? "border-green-500 bg-green-50 dark:bg-green-950"
-                : "border-red-500 bg-red-50 dark:bg-red-950"
-            }`}
-          >
-            <CheckCircle
-              className={`h-4 w-4 ${
+          {!book.isDeleted && (
+            <Alert
+              className={`border-l-4 ${
                 availabilityStatus === "Available"
-                  ? "text-green-600 dark:text-green-400"
-                  : "text-red-600 dark:text-red-400"
+                  ? "border-green-500 bg-green-50 dark:bg-green-950"
+                  : "border-red-500 bg-red-50 dark:bg-red-950"
               }`}
-            />
-            <AlertDescription className="font-medium text-zinc-800 dark:text-zinc-200">
-              {availabilityStatus} • {book?.availableQuantity} of{" "}
-              {book?.quantity} copies available
-            </AlertDescription>
-          </Alert>
+            >
+              <CheckCircle
+                className={`h-4 w-4 ${
+                  availabilityStatus === "Available"
+                    ? "text-green-600 dark:text-green-400"
+                    : "text-red-600 dark:text-red-400"
+                }`}
+              />
+              <AlertDescription className="font-medium text-zinc-800 dark:text-zinc-200">
+                {availabilityStatus} • {book?.availableQuantity} of{" "}
+                {book?.quantity} copies available
+              </AlertDescription>
+            </Alert>
+          )}
 
           {/* Keywords */}
           <div className="flex flex-wrap gap-2">
@@ -198,7 +207,12 @@ const Book = () => {
 
           {/* Action Button */}
           <div className="w-full">
-            {book?.availableQuantity > 0 ? (
+            {book?.isDeleted ? (
+              <div className="flex items-center gap-2 text-customGray">
+                <Clock className="w-8 h-8" />
+                <span className="font-bold text-3xl">Coming Soon</span>
+              </div>
+            ) : book?.availableQuantity > 0 ? (
               <Button className="text-center w-full font-bold">
                 Request Book
               </Button>

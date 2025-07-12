@@ -68,13 +68,11 @@ exports.createBook = async (req, res) => {
       },
     });
 
-    return res
-      .status(201)
-      .json({
-        success: true,
-        message: "Book Created Successfully",
-        data: newBook,
-      });
+    return res.status(201).json({
+      success: true,
+      message: "Book Created Successfully",
+      data: newBook,
+    });
   } catch (error) {
     console.log("CreateBook Error : ", error);
     return res.status(500).json({
@@ -154,7 +152,7 @@ exports.getBooks = async (req, res) => {
       Book.countDocuments(query),
       Book.find(query)
         .select(
-          "title description quantity availableQuantity authors genres keywords language rating coverImage"
+          "title description quantity availableQuantity authors genres keywords language rating coverImage isDeleted"
         )
         .skip(skip)
         .limit(limit)
@@ -240,7 +238,7 @@ exports.updateBook = async (req, res) => {
 exports.getFeaturedBooks = async (req, res) => {
   const limit = parseInt(req.query.limit) || 10;
   try {
-    const books = await Book.find()
+    const books = await Book.find({ isDeleted: false })
       .select(
         "title description availableQuantity authors genres language rating coverImage"
       )

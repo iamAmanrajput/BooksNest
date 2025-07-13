@@ -27,6 +27,7 @@ import {
   Languages,
   Pencil,
   Plus,
+  RotateCcw,
   Send,
   Trash2,
   User2,
@@ -61,6 +62,8 @@ const AdminBooks = () => {
   const [loading, setLoading] = useState({
     fetchBookLoading: false,
     createBookLoading: false,
+    deleteBookLoading: false,
+    restoreBookLoading: false,
   });
   const [isBookAddModelOpen, setIsBookAddModelOpen] = useState(false);
   const [pagination, setPagination] = useState({
@@ -283,6 +286,82 @@ const AdminBooks = () => {
     setBooks((prev) =>
       prev.map((book) => (book._id === id ? { ...book, ...data } : book))
     );
+  };
+
+  // delete book
+  const handleBookDelete = async (bookId) => {
+    setLoading((prev) => ({ ...prev, deleteBookLoading: true }));
+
+    if (!bookId) {
+      toast.error("Book ID is missing");
+      setLoading((prev) => ({ ...prev, deleteBookLoading: false }));
+      return;
+    }
+
+    try {
+      const response = await axios.patch(
+        `${import.meta.env.VITE_BACKEND_URL}/book/softDelete`,
+        { bookId },
+        {
+          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+        }
+      );
+
+      if (response?.data?.success) {
+        toast.success(response.data.message || "Book Deleted Successfully");
+        setBooks((prev) =>
+          prev.map((book) =>
+            book._id === bookId ? { ...book, isDeleted: true } : book
+          )
+        );
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error(error?.response?.data?.message || "Internal Server Error");
+    } finally {
+      setLoading((prev) => ({ ...prev, deleteBookLoading: false }));
+    }
+  };
+
+  // restore book
+  const handleBookRestore = async (bookId) => {
+    setLoading((prev) => ({ ...prev, restoreBookLoading: true }));
+
+    if (!bookId) {
+      toast.error("Book ID is missing");
+      setLoading((prev) => ({ ...prev, restoreBookLoading: false }));
+      return;
+    }
+
+    try {
+      const response = await axios.patch(
+        `${import.meta.env.VITE_BACKEND_URL}/book/restore`,
+        { bookId },
+        {
+          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+        }
+      );
+
+      if (response?.data?.success) {
+        toast.success(response.data.message || "Book Restored Successfully");
+        setBooks((prev) =>
+          prev.map((book) =>
+            book._id === bookId ? { ...book, isDeleted: false } : book
+          )
+        );
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error(error?.response?.data?.message || "Internal Server Error");
+    } finally {
+      setLoading((prev) => ({ ...prev, restoreBookLoading: false }));
+    }
   };
 
   // Fetch books from API
@@ -529,11 +608,37 @@ const AdminBooks = () => {
                       bookDetails={book}
                     />
                   )}
-
-                  <Button className="flex-1" variant="destructive">
-                    <Trash2 className="h-4 w-4 mr-1" />
-                    Delete
-                  </Button>
+                  {book?.isDeleted ? (
+                    <Button
+                      onClick={() => handleBookRestore(book?._id)}
+                      className="flex-1"
+                      variant="secondary"
+                    >
+                      {loading.restoreBookLoading ? (
+                        <Loader />
+                      ) : (
+                        <>
+                          <RotateCcw className="h-4 w-4 mr-1" />
+                          Restore
+                        </>
+                      )}
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={() => handleBookDelete(book?._id)}
+                      className="flex-1"
+                      variant="destructive"
+                    >
+                      {loading.deleteBookLoading ? (
+                        <Loader />
+                      ) : (
+                        <>
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          Delete
+                        </>
+                      )}
+                    </Button>
+                  )}
                 </CardFooter>
               </Card>
             ))

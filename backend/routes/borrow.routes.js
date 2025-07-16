@@ -9,6 +9,7 @@ const {
   renewBook,
   getBorrowHistory,
   issueBookUsingEmail,
+  getRequestStats,
 } = require("../controllers/borrow.controller");
 
 const { isLoggedIn, isAdmin } = require("../middlewares/verifyToken");
@@ -28,6 +29,9 @@ router.get("/send/returnRequest/:requestId", isLoggedIn, sendReturnRequest);
 router.patch("/send/renewRequest/:requestId", isLoggedIn, renewBook);
 
 // ADMIN ROUTES
+
+// Requests Stats
+router.get("/requestStats", isLoggedIn, isAdmin, getRequestStats);
 
 // Issue Book Using Email
 router.post("/issueBook", isLoggedIn, isAdmin, issueBookUsingEmail);

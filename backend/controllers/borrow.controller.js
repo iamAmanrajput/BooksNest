@@ -744,3 +744,20 @@ exports.getBorrowHistory = async (req, res) => {
     });
   }
 };
+
+// get Requests stats
+exports.getRequestStats = async (req, res) => {
+  try {
+    const [pendingRequests, returnRequests] = await Promise.all([
+      BorrowRecord.countDocuments({ status: "pending" }),
+      BorrowRecord.countDocuments({ status: "return_requested" }),
+    ]);
+    return res
+      .status(200)
+      .json({ success: true, data: { pendingRequests, returnRequests } });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal Server Error" });
+  }
+};

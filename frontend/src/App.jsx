@@ -17,6 +17,7 @@ import AdminRoute from "./routes/AdminRoute";
 import Dashboard from "./pages/admin/Dashboard";
 import AdminLayout from "./layouts/AdminLayout";
 import AdminBooks from "./pages/admin/AdminBooks";
+import Requests from "./pages/admin/Requests";
 
 const App = () => {
   return (
@@ -120,6 +121,17 @@ const App = () => {
             <AdminRoute>
               <AdminLayout>
                 <AdminBooks />
+              </AdminLayout>
+            </AdminRoute>
+          }
+        />
+
+        <Route
+          path="/admin/requests"
+          element={
+            <AdminRoute>
+              <AdminLayout>
+                <Requests />
               </AdminLayout>
             </AdminRoute>
           }

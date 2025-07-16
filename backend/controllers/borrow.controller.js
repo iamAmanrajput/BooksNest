@@ -761,3 +761,54 @@ exports.getRequestStats = async (req, res) => {
       .json({ success: false, message: "Internal Server Error" });
   }
 };
+
+//  get Requests Data
+exports.fetchRequestData = async (req, res) => {
+  try {
+    let { email = "", status = "pending", page = 1, limit = 10 } = req.query;
+
+    page = parseInt(page);
+    limit = parseInt(limit);
+
+    const query = { status };
+
+    if (email.trim()) {
+      const trimmedEmail = email.trim();
+      const emailPattern = /^.+@.+\..+$/;
+      if (!emailPattern.test(trimmedEmail)) {
+        return res.status(400).json({
+          success: false,
+          message: "Please enter a valid email address",
+        });
+      }
+
+      query.email = { $regex: trimmedEmail, $options: "i" };
+    }
+
+    const totalRecords = await BorrowRecord.countDocuments(query);
+    const skip = (page - 1) * limit;
+
+    const records = await BorrowRecord.find(query)
+      .limit(limit)
+      .skip(skip)
+      .sort({ updatedAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        records,
+        pagination: {
+          totalRecords,
+          currentPage: page,
+          totalPages: Math.ceil(totalRecords / limit),
+          pageSize: limit,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Error in fetchRequestData:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal Server Error" });
+  }
+};

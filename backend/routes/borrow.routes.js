@@ -10,6 +10,7 @@ const {
   getBorrowHistory,
   issueBookUsingEmail,
   getRequestStats,
+  fetchRequestData,
 } = require("../controllers/borrow.controller");
 
 const { isLoggedIn, isAdmin } = require("../middlewares/verifyToken");
@@ -32,6 +33,9 @@ router.patch("/send/renewRequest/:requestId", isLoggedIn, renewBook);
 
 // Requests Stats
 router.get("/requestStats", isLoggedIn, isAdmin, getRequestStats);
+
+// Requests Data
+router.get("/requestData", isLoggedIn, isAdmin, fetchRequestData);
 
 // Issue Book Using Email
 router.post("/issueBook", isLoggedIn, isAdmin, issueBookUsingEmail);

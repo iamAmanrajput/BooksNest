@@ -773,15 +773,7 @@ exports.fetchRequestData = async (req, res) => {
     const query = { status };
 
     if (email.trim()) {
-      const trimmedEmail = email.trim();
-      const emailPattern = /^.+@.+\..+$/;
-      if (!emailPattern.test(trimmedEmail)) {
-        return res.status(400).json({
-          success: false,
-          message: "Please enter a valid email address",
-        });
-      }
-
+      const trimmedEmail = email.trim().toLowerCase();
       query.email = { $regex: trimmedEmail, $options: "i" };
     }
 
@@ -795,15 +787,13 @@ exports.fetchRequestData = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      data: {
-        records,
-        pagination: {
-          totalRecords,
-          currentPage: page,
-          totalPages: Math.ceil(totalRecords / limit),
-          pageSize: limit,
-        },
+      pagination: {
+        totalRecords,
+        currentPage: page,
+        totalPages: Math.ceil(totalRecords / limit),
+        pageSize: limit,
       },
+      data: records,
     });
   } catch (error) {
     console.error("Error in fetchRequestData:", error);

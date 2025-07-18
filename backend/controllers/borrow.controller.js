@@ -90,8 +90,7 @@ exports.sendBorrowRequest = async (req, res) => {
 // handle Borrow Request -- Admin
 exports.handleBorrowRequest = async (req, res) => {
   try {
-    const { requestId } = req.params;
-    const { action } = req.body;
+    const { action, requestId } = req.body;
 
     const record = await BorrowRecord.findById(requestId).populate(
       "userId bookId"
@@ -259,7 +258,7 @@ exports.sendReturnRequest = async (req, res) => {
 // Book Return and Auto-issue to next in queue --Admin
 exports.handleReturnRequest = async (req, res) => {
   try {
-    const { requestId } = req.params;
+    const { requestId } = req.body;
 
     const record = await BorrowRecord.findById(requestId).populate(
       "userId bookId"

@@ -41,19 +41,9 @@ router.get("/requestData", isLoggedIn, isAdmin, fetchRequestData);
 router.post("/issueBook", isLoggedIn, isAdmin, issueBookUsingEmail);
 
 // Handle borrow request
-router.patch(
-  "/handle/borrowRequest/:requestId",
-  isLoggedIn,
-  isAdmin,
-  handleBorrowRequest
-);
+router.patch("/handle/borrowRequest", isLoggedIn, isAdmin, handleBorrowRequest);
 
 // Handle return request
-router.patch(
-  "/handle/returnRequest/:requestId",
-  isLoggedIn,
-  isAdmin,
-  handleReturnRequest
-);
+router.patch("/handle/returnRequest", isLoggedIn, isAdmin, handleReturnRequest);
 
 module.exports = router;

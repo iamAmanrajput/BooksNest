@@ -769,31 +769,107 @@ exports.fetchRequestData = async (req, res) => {
 
     page = parseInt(page);
     limit = parseInt(limit);
-
-    const query = { status };
-
-    if (email.trim()) {
-      const trimmedEmail = email.trim().toLowerCase();
-      query.email = { $regex: trimmedEmail, $options: "i" };
-    }
-
-    const totalRecords = await BorrowRecord.countDocuments(query);
     const skip = (page - 1) * limit;
 
-    const records = await BorrowRecord.find(query)
-      .limit(limit)
-      .skip(skip)
-      .sort({ updatedAt: -1 });
+    const matchStage = {
+      status,
+    };
+
+    if (email.trim()) {
+      matchStage["user.email"] = {
+        $regex: email.trim().toLowerCase(),
+        $options: "i",
+      };
+    }
+
+    const records = await BorrowRecord.aggregate([
+      {
+        $lookup: {
+          from: "users",
+          localField: "userId",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+      { $unwind: "$user" },
+      {
+        $lookup: {
+          from: "books",
+          localField: "bookId",
+          foreignField: "_id",
+          as: "book",
+        },
+      },
+      { $unwind: "$book" },
+      {
+        $addFields: {
+          fullName: "$user.fullName",
+          email: "$user.email",
+          profilePic: "$user.profilePic",
+          title: "$book.title",
+          authors: "$book.authors",
+        },
+      },
+      {
+        $match: matchStage,
+      },
+      {
+        $sort: { updatedAt: -1 },
+      },
+      {
+        $project: {
+          fullName: 1,
+          email: 1,
+          profilePic: 1,
+          title: 1,
+          authors: 1,
+          status: 1,
+          issueDate: 1,
+          dueDate: 1,
+          returnDate: 1,
+          fine: 1,
+          renewCount: 1,
+          lastRenewedAt: 1,
+          createdAt: 1,
+          updatedAt: 1,
+        },
+      },
+      {
+        $facet: {
+          metadata: [{ $count: "total" }],
+          data: [{ $skip: skip }, { $limit: limit }],
+        },
+      },
+    ]);
+
+    const data = records[0]?.data || [];
+    const total = records[0]?.metadata[0]?.total || 0;
+
+    // Overdue fine calculation
+    const enrichedRecords = data.map((doc) => {
+      if (doc.dueDate) {
+        const today = new Date();
+        const due = new Date(doc.dueDate);
+        const diffMs = today - due;
+
+        const overdueDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+        if (overdueDays > 0) {
+          doc.overdueDays = overdueDays;
+          doc.calculatedFine = overdueDays * PER_DAY_FINE;
+        }
+      }
+      return doc;
+    });
 
     return res.status(200).json({
       success: true,
       pagination: {
-        totalRecords,
+        totalRecords: total,
         currentPage: page,
-        totalPages: Math.ceil(totalRecords / limit),
+        totalPages: Math.ceil(total / limit),
         pageSize: limit,
       },
-      data: records,
+      data: enrichedRecords,
     });
   } catch (error) {
     console.error("Error in fetchRequestData:", error);

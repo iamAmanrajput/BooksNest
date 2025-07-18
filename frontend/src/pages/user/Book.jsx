@@ -171,7 +171,7 @@ const Book = () => {
           </div>
 
           {/* Availability */}
-          {!book.isDeleted && (
+          {!book?.isDeleted && (
             <Alert
               className={`border-l-4 ${
                 availabilityStatus === "Available"

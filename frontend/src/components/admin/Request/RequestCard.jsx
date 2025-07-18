@@ -4,13 +4,102 @@ import {
   CardFooter,
   CardHeader,
 } from "@/components/ui/card";
-import React from "react";
+import React, { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AlertTriangle, CheckCircle, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatDateTime } from "@/constants/Helper";
+import axios from "axios";
+import { toast } from "sonner";
+import Loader from "@/components/common/Loader";
 
-const RequestCard = ({ requestData }) => {
+const RequestCard = ({ requestData, deleteRequestFunction }) => {
+  const [loading, setLoading] = useState({
+    approveRequestLoading: false,
+    rejectRequestLoading: false,
+  });
+
+  const handleApproveRequest = async (requestId, actionData) => {
+    if (actionData === "rejected") {
+      setLoading((prev) => ({ ...prev, rejectRequestLoading: true }));
+    } else {
+      setLoading((prev) => ({ ...prev, approveRequestLoading: true }));
+    }
+    try {
+      const response = await axios.patch(
+        `${import.meta.env.VITE_BACKEND_URL}/borrow/handle/borrowRequest`,
+        { action: actionData, requestId },
+        {
+          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+        }
+      );
+      if (response?.data?.success) {
+        if (actionData === "rejected") {
+          toast.success(
+            response.data.message || "Book request rejected successfully"
+          );
+        } else {
+          toast.success(
+            response.data.message || "Book request accepted successfully"
+          );
+        }
+        deleteRequestFunction(requestId);
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error(error?.response?.data?.message);
+    } finally {
+      if (actionData === "rejected") {
+        setLoading((prev) => ({ ...prev, rejectRequestLoading: false }));
+      } else {
+        setLoading((prev) => ({ ...prev, approveRequestLoading: false }));
+      }
+    }
+  };
+
+  const handleReturnRequest = async (requestId) => {
+    setLoading((prev) => ({ ...prev, approveRequestLoading: true }));
+    try {
+      const response = await axios.patch(
+        `${import.meta.env.VITE_BACKEND_URL}/borrow/handle/returnRequest`,
+        { requestId },
+        {
+          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+        }
+      );
+      if (response?.data?.success) {
+        toast.success(
+          response.data.message || "Book request accepted successfully"
+        );
+        deleteRequestFunction(requestId);
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error(error?.response?.data?.message);
+    } finally {
+      setLoading((prev) => ({ ...prev, approveRequestLoading: false }));
+    }
+  };
+
+  const handleApproveClick = () => {
+    const id = requestData?._id;
+    const status = requestData?.status;
+
+    if (!id) return;
+
+    if (status === "pending") {
+      handleApproveRequest(id, "issued");
+    } else {
+      handleReturnRequest(id);
+    }
+  };
+
   return (
     <Card className="flex flex-col h-full justify-between">
       {/* Header */}
@@ -89,15 +178,33 @@ const RequestCard = ({ requestData }) => {
 
       {/* Footer Buttons */}
       <CardFooter className="flex gap-2">
-        <Button className="flex items-center gap-2 flex-1">
-          <CheckCircle className="w-4 h-4" /> Approve
+        <Button
+          onClick={handleApproveClick}
+          className="flex items-center gap-2 flex-1"
+          disabled={loading.approveRequestLoading}
+        >
+          {loading.approveRequestLoading ? (
+            <Loader />
+          ) : (
+            <>
+              <CheckCircle className="w-4 h-4" /> Approve
+            </>
+          )}
         </Button>
         {requestData.status === "pending" && (
           <Button
+            onClick={() => handleApproveRequest(requestData?._id, "rejected")}
             className="flex items-center gap-2 flex-1"
             variant="destructive"
+            disabled={loading.rejectRequestLoading}
           >
-            <XCircle className="w-4 h-4" /> Reject
+            {loading.rejectRequestLoading ? (
+              <Loader />
+            ) : (
+              <>
+                <XCircle className="w-4 h-4" /> Reject
+              </>
+            )}
           </Button>
         )}
       </CardFooter>

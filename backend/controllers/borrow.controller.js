@@ -644,10 +644,15 @@ exports.issueBookUsingEmail = async (req, res) => {
 const PER_DAY_FINE = 5;
 exports.getBorrowHistory = async (req, res) => {
   try {
-    const userId = req.user._id;
+    let userId = req.user._id;
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const status = req.query.status || "";
+    const id = req.query.userId || "";
+
+    if (id) {
+      userId = id;
+    }
 
     const skip = (page - 1) * limit;
 

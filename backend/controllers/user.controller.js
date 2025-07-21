@@ -3,62 +3,47 @@ const BorrowRecord = require("../models/borrowRecord.model");
 
 // Get All Users -- Admin
 exports.getAllUsers = async (req, res) => {
-  let { page, limit, category, search } = req.query;
+  let { page, limit, category = "active", email = "" } = req.query;
 
   try {
     page = parseInt(page) || 1;
-    limit = parseInt(limit) || 20;
+    limit = parseInt(limit) || 10;
 
-    let query = { role: "user" };
+    const query = {};
 
-    if (category === "blocked") {
-      query.isBlocked = true;
+    if (email.trim()) {
+      email = email.trim().toLowerCase();
+      query.email = { $regex: email, $options: "i" };
     }
 
-    if (search) {
-      query.email = { $regex: search, $options: "i" };
+    if (category === "active") {
+      query.isBlocked = false;
+    } else if (category === "blocked") {
+      query.isBlocked = true;
     }
 
     const totalUsers = await User.countDocuments(query);
     const totalPages = Math.ceil(totalUsers / limit);
 
     const users = await User.find(query)
-      .select("fullName email profilePic isBlocked fineAmount borrowedRecords")
-      .populate({
-        path: "borrowedRecords",
-        select: "status", // Only need status to calculate counts
-      })
       .skip((page - 1) * limit)
-      .limit(limit);
+      .limit(limit)
+      .lean();
 
-    if (!users || users.length === 0) {
-      return res
-        .status(404)
-        .json({ success: false, message: "No users found" });
-    }
+    const updatedUsers = await Promise.all(
+      users.map(async (user) => {
+        const issuedBooks = await BorrowRecord.countDocuments({
+          userId: user._id,
+          status: "issued",
+        });
 
-    // Prepare response with counts
-    const usersWithBorrowStats = users.map((user) => {
-      const totalBorrowedBooks = user.borrowedRecords.length;
-      const currentlyBorrowedBooks = user.borrowedRecords.filter(
-        (record) => record.status !== "returned"
-      ).length;
-
-      return {
-        _id: user._id,
-        fullName: user.fullName,
-        email: user.email,
-        profilePic: user.profilePic,
-        isBlocked: user.isBlocked,
-        fineAmount: user.fineAmount,
-        totalBorrowedBooks,
-        currentlyBorrowedBooks,
-      };
-    });
+        return { ...user, issuedBooks };
+      })
+    );
 
     return res.status(200).json({
       success: true,
-      data: usersWithBorrowStats,
+      data: updatedUsers,
       pagination: {
         totalUsers,
         totalPages,
@@ -67,7 +52,7 @@ exports.getAllUsers = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Error fetching users:", error);
+    console.error("Error in getAllUsers:", error);
     return res.status(500).json({
       success: false,
       message: "Server Error",
@@ -79,7 +64,7 @@ exports.getAllUsers = async (req, res) => {
 // Change User Account Status
 exports.changeAccountStatus = async (req, res) => {
   try {
-    const userId = req.params.id;
+    const { userId } = req.body;
 
     const user = await User.findById(userId);
 
@@ -134,5 +119,26 @@ exports.recentActivities = async (req, res) => {
       success: false,
       error: "Failed to fetch recent activities",
     });
+  }
+};
+
+// get users stats
+exports.usersStats = async (req, res) => {
+  try {
+    const [totalUsers, unblockedUsers, blockedUsers] = await Promise.all([
+      User.countDocuments({}),
+      User.countDocuments({ isBlocked: false }),
+      User.countDocuments({ isBlocked: true }),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      data: { totalUsers, unblockedUsers, blockedUsers },
+    });
+  } catch (error) {
+    console.error("Error in usersStats:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal Server Error" });
   }
 };

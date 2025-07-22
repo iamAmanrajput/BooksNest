@@ -1,8 +1,4 @@
-import React from "react";
-import UserCard from "./UserCard";
-import { useSelector } from "react-redux";
 import Loader from "@/components/common/Loader";
-import { UserX } from "lucide-react";
 import {
   Pagination,
   PaginationContent,
@@ -13,9 +9,13 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { getPaginationRange } from "@/constants/Helper";
+import { UserX } from "lucide-react";
+import { useSelector } from "react-redux";
+import UserCard from "./UserCard";
 
-const UsersPage = () => {
+const UsersPage = ({ fetchUsersData }) => {
   const { users, loading, pagination } = useSelector((state) => state.users);
+
   return (
     <>
       {loading.fetchUsersLoading ? (
@@ -37,17 +37,17 @@ const UsersPage = () => {
           ))}
         </div>
       )}
+
       {/* Pagination */}
       {pagination.totalUsers > pagination.pageSize && (
         <div className="flex justify-center items-center mt-6">
           <Pagination>
             <PaginationContent>
-              {/* Previous */}
               <PaginationItem>
                 <PaginationPrevious
                   onClick={() => {
                     if (pagination.currentPage > 1) {
-                      fetchBorrowRecord(pagination.currentPage - 1);
+                      fetchUsersData(pagination.currentPage - 1);
                     }
                   }}
                   className={
@@ -58,7 +58,6 @@ const UsersPage = () => {
                 />
               </PaginationItem>
 
-              {/* Pages */}
               {getPaginationRange(
                 pagination.currentPage,
                 pagination.totalPages
@@ -68,7 +67,7 @@ const UsersPage = () => {
                     <PaginationEllipsis />
                   ) : (
                     <PaginationLink
-                      onClick={() => fetchBorrowRecord(page)}
+                      onClick={() => fetchUsersData(page)}
                       isActive={pagination.currentPage === page}
                     >
                       {page}
@@ -77,12 +76,11 @@ const UsersPage = () => {
                 </PaginationItem>
               ))}
 
-              {/* Next */}
               <PaginationItem>
                 <PaginationNext
                   onClick={() => {
                     if (pagination.currentPage < pagination.totalPages) {
-                      fetchBorrowRecord(pagination.currentPage + 1);
+                      fetchUsersData(pagination.currentPage + 1);
                     }
                   }}
                   className={

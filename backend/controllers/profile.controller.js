@@ -8,7 +8,11 @@ dotenv.config();
 // get Borrow books Count Stats
 exports.getProfileStats = async (req, res) => {
   try {
-    const userId = req.user._id;
+    let userId = req.user._id;
+    const id = req.query.id || "";
+    if (id) {
+      userId = id;
+    }
 
     // Parallel promises
     const [issuedBooksCount, returnedBooksCount, user, overdueBooksCount] =

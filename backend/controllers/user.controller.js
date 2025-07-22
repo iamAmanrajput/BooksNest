@@ -3,7 +3,7 @@ const BorrowRecord = require("../models/borrowRecord.model");
 
 // Get All Users -- Admin
 exports.getAllUsers = async (req, res) => {
-  let { page, limit, category = "active", email = "" } = req.query;
+  let { page, limit, category = "", email = "" } = req.query;
 
   try {
     page = parseInt(page) || 1;
@@ -16,10 +16,12 @@ exports.getAllUsers = async (req, res) => {
       query.email = { $regex: email, $options: "i" };
     }
 
-    if (category === "active") {
-      query.isBlocked = false;
-    } else if (category === "blocked") {
-      query.isBlocked = true;
+    if (category) {
+      if (category === "active") {
+        query.isBlocked = false;
+      } else if (category === "blocked") {
+        query.isBlocked = true;
+      }
     }
 
     const totalUsers = await User.countDocuments(query);

@@ -1,6 +1,7 @@
 const Book = require("../models/book.model");
 const User = require("../models/user.model");
 const BorrowRecord = require("../models/borrowRecord.model");
+const { getTimeAgo } = require("../utils/time");
 
 // Summary Analytics
 exports.getSummaryAnalytics = async (req, res) => {
@@ -199,6 +200,7 @@ exports.getTopBorrowedBooks = async (req, res) => {
           bookId: "$book._id",
           title: "$book.title",
           authors: "$book.authors",
+          genres: "$book.genres",
           borrowCount: 1,
         },
       },
@@ -220,17 +222,34 @@ exports.getRecentUserActivity = async (req, res) => {
   try {
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
     const activities = await BorrowRecord.find({
       $or: [
         { issueDate: { $gte: sevenDaysAgo } },
         { returnDate: { $gte: sevenDaysAgo } },
       ],
     })
-      .populate("userId", "fullName email")
+      .populate("userId", "fullName email profilePic")
       .populate("bookId", "title authors")
       .sort({ updatedAt: -1 })
+      .limit(5)
       .lean();
-    // Format for frontend
+
+    const getTimeAgo = (date) => {
+      const now = new Date();
+      const diff = now - new Date(date);
+
+      const seconds = Math.floor(diff / 1000);
+      const minutes = Math.floor(diff / (1000 * 60));
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+      if (seconds < 60) return `${seconds} sec ago`;
+      if (minutes < 60) return `${minutes} min ago`;
+      if (hours < 24) return `${hours} hour${hours > 1 ? "s" : ""} ago`;
+      return `${days} day${days > 1 ? "s" : ""} ago`;
+    };
+
     const result = activities.map((a) => ({
       user: a.userId,
       book: a.bookId,
@@ -238,13 +257,15 @@ exports.getRecentUserActivity = async (req, res) => {
       issueDate: a.issueDate,
       dueDate: a.dueDate,
       returnDate: a.returnDate,
-      updatedAt: a.updatedAt,
+      timeAgo: getTimeAgo(a.updatedAt),
     }));
+
     return res.status(200).json({
       success: true,
       data: result,
     });
   } catch (err) {
+    console.error(err);
     return res.status(500).json({
       success: false,
       message: "Internal Server Error",

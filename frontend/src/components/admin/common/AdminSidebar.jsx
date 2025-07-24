@@ -28,7 +28,7 @@ const items = [
   { title: "Books", url: "/admin/books", icon: BookOpen },
   { title: "Users", url: "/admin/users", icon: Users },
   { title: "Requests", url: "/admin/requests", icon: Clock },
-  { title: "Reports", url: "/admin/reports", icon: BarChart3 },
+  { title: "Analytics", url: "/admin/analytics", icon: BarChart3 },
   { title: "Settings", url: "/admin/settings", icon: Settings },
 ];
 

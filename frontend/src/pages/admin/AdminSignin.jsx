@@ -55,7 +55,7 @@ const AdminSignin = () => {
     try {
       if (!validateForm()) return;
       const response = await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/auth/admin/signin`,
+        `${import.meta.env.VITE_BACKEND_URL}/admin/signin`,
         form,
         {
           withCredentials: true,

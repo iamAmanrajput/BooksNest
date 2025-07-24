@@ -29,7 +29,6 @@ const items = [
   { title: "Users", url: "/admin/users", icon: Users },
   { title: "Requests", url: "/admin/requests", icon: Clock },
   { title: "Analytics", url: "/admin/analytics", icon: BarChart3 },
-  { title: "Settings", url: "/admin/settings", icon: Settings },
 ];
 
 const AdminSidebar = () => {

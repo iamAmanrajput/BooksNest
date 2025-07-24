@@ -19,6 +19,7 @@ import AdminLayout from "./layouts/AdminLayout";
 import AdminBooks from "./pages/admin/AdminBooks";
 import Requests from "./pages/admin/Requests";
 import AllUsers from "./pages/admin/AllUsers";
+import Analytics from "./pages/admin/Analytics";
 
 const App = () => {
   return (
@@ -144,6 +145,17 @@ const App = () => {
             <AdminRoute>
               <AdminLayout>
                 <Requests />
+              </AdminLayout>
+            </AdminRoute>
+          }
+        />
+
+        <Route
+          path="/admin/analytics"
+          element={
+            <AdminRoute>
+              <AdminLayout>
+                <Analytics />
               </AdminLayout>
             </AdminRoute>
           }

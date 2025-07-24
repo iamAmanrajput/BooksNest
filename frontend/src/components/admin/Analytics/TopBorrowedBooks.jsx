@@ -9,7 +9,6 @@ import {
 import React from "react";
 
 const TopBorrowedBooks = ({ topBorrowedBooksData }) => {
-  console.log(topBorrowedBooksData);
   return (
     <Card>
       <CardHeader>

@@ -88,7 +88,7 @@ exports.getIssuedBooksPerMonth = async (req, res) => {
             year: { $year: "$issueDate" },
             month: { $month: "$issueDate" },
           },
-          count: { $sum: 1 },
+          books: { $sum: 1 },
         },
       },
       {
@@ -107,7 +107,7 @@ exports.getIssuedBooksPerMonth = async (req, res) => {
       result.push({
         year,
         month,
-        count: found ? found.count : 0,
+        books: found ? found.books : 0,
       });
     }
     return res.status(200).json({
@@ -139,7 +139,7 @@ exports.getUsersPerMonth = async (req, res) => {
             year: { $year: "$createdAt" },
             month: { $month: "$createdAt" },
           },
-          count: { $sum: 1 },
+          users: { $sum: 1 },
         },
       },
       {
@@ -158,7 +158,7 @@ exports.getUsersPerMonth = async (req, res) => {
       result.push({
         year,
         month,
-        count: found ? found.count : 0,
+        users: found ? found.users : 0,
       });
     }
     return res.status(200).json({

@@ -47,13 +47,6 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    borrowedRecords: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "BorrowRecord",
-        default: [],
-      },
-    ],
     profileLastUpdated: {
       type: Date,
       default: Date.now,

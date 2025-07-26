@@ -43,4 +43,4 @@ backend/coverage/
 
 # 🚫 Others (optional)
 *.swp
-*.swo
+*.swo 

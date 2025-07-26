@@ -64,3 +64,44 @@ exports.createReview = async (req, res) => {
     });
   }
 };
+
+// delete Review
+exports.deleteReview = async (req, res) => {
+  const { reviewId } = req.params;
+  const userId = req.user._id;
+
+  try {
+    const review = await Review.findById(reviewId);
+
+    if (!review) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Review not found" });
+    }
+
+    if (!review.user.equals(userId)) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to delete this review",
+      });
+    }
+
+    const book = await Book.findById(review.book);
+    if (book) {
+      book.reviews = book.reviews.filter((id) => !id.equals(review._id));
+      await book.save();
+      await book.calculateRating();
+    }
+
+    await Review.findByIdAndDelete(reviewId);
+
+    return res
+      .status(200)
+      .json({ success: true, message: "Review deleted successfully" });
+  } catch (error) {
+    console.error(error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
+  }
+};

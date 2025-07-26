@@ -10,10 +10,19 @@ import {
   MapPin,
   BookOpen,
 } from "lucide-react";
+import { useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 
 const Footer = () => {
   const navigate = useNavigate();
+  const { role } = useSelector((state) => state.auth);
+  const handleNavigate = () => {
+    if (role === "user") {
+      navigate("/");
+    } else {
+      navigate("/admin/dashboard");
+    }
+  };
   return (
     <footer className="w-full border-t border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900">
       {/* Main Footer Content */}
@@ -23,7 +32,7 @@ const Footer = () => {
           <div className="space-y-6">
             <div>
               <h3
-                onClick={() => navigate("/")}
+                onClick={handleNavigate}
                 className="text-2xl cursor-pointer flex gap-2 items-center font-bold text-zinc-900 dark:text-zinc-100 mb-4"
               >
                 <BookOpen className="text-customblue" /> <span>BooksNest</span>

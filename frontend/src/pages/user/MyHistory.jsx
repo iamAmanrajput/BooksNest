@@ -203,7 +203,7 @@ const MyHistory = () => {
           <Loader width={9} height={40} />
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 mt-6 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-2 gap-4 mt-6 mb-6">
           {borrowRecord?.length === 0 ? (
             <div className="col-span-full flex flex-col items-center justify-center text-center px-4 sm:px-6 py-16 rounded-2xl bg-white dark:bg-zinc-900 shadow-md">
               <FileQuestion className="w-16 h-16 text-red-500 dark:text-red-400 mb-4" />

@@ -108,7 +108,7 @@ const BorrowRecordCard = ({
             {["issued", "returned", "return_requested", "overdue"].includes(
               status
             ) && (
-              <div className="flex items-center text-sm">
+              <div className="flex items-center justify-self-end text-sm">
                 <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
                 <div>
                   <span className="text-muted-foreground">Due: </span>

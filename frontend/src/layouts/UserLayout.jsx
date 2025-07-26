@@ -6,7 +6,7 @@ import {
   SidebarInset,
 } from "@/components/ui/sidebar";
 import UserSidebar from "@/components/user/UserSidebar";
-import Navbar from "@/components/common/Navbar";
+import Navbar from "@/components/user/Navbar";
 import Footer from "@/components/user/Footer";
 
 const UserLayout = ({ children }) => {

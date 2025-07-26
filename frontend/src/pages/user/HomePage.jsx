@@ -126,9 +126,15 @@ const HomePage = () => {
 
       {/* Featured Books */}
       <div className="w-full mb-6 rounded-2xl">
-        <h1 className="text-4xl font-bold text-center pt-6 pb-9">
-          Featured Books
-        </h1>
+        <div className="p-6 bg-white dark:bg-zinc-900 rounded-2xl  flex flex-col items-center mb-6">
+          <h1 className="text-4xl font-extrabold tracking-tight text-center text-zinc-900 dark:text-zinc-100  drop-shadow-md">
+            Featured Books
+          </h1>
+          <p className="mt-2 text-customGray text-lg font-medium text-center max-w-md">
+            Discover the most popular and highly rated books
+          </p>
+        </div>
+
         {loading.featuredBooks === true ? (
           <div className="flex justify-center my-10">
             {" "}

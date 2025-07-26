@@ -34,7 +34,7 @@ const NotificationPopOver = () => {
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
 
   useEffect(() => {
-    const fetchUnreadNotificationCount = async (req, res) => {
+    const fetchUnreadNotificationCount = async () => {
       try {
         const response = await axios.get(
           `${import.meta.env.VITE_BACKEND_URL}/notification/count`,
@@ -101,6 +101,7 @@ const NotificationPopOver = () => {
 
   const handleFetchNotifications = async () => {
     setLoading((prev) => ({ ...prev, fechNotificationLoading: true }));
+    setUnreadNotificationCount(0);
     try {
       const response = await axios.get(
         `${import.meta.env.VITE_BACKEND_URL}/notification/notifications`,

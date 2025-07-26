@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import ModeToggle from "./ModeToggle";
+import ModeToggle from "../common/ModeToggle";
 import { SidebarTrigger } from "../ui/sidebar";
 import { Separator } from "../ui/separator";
 import { Button } from "../ui/button";
@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import axios from "axios";
 import { useDispatch } from "react-redux";
 import { setUserLogout } from "@/redux/slices/authSlice";
-import NotificationPopOver from "../user/NotificationPopover";
+import NotificationPopOver from "./NotificationPopover";
 
 const Navbar = () => {
   const location = useLocation();
@@ -24,8 +24,6 @@ const Navbar = () => {
   }, [location.pathname]);
 
   const handleLogout = async () => {
-    if (!localStorage.getItem("accessToken")) return navigate("/signin");
-
     try {
       const response = await axios.get(
         `${import.meta.env.VITE_BACKEND_URL}/auth/logout`,

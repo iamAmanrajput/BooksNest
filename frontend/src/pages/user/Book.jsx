@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { starGenerator } from "@/constants/Helper";
 import {
+  BookOpen,
   CheckCircle,
   Clock,
   Delete,
@@ -35,6 +36,8 @@ const Book = () => {
   const [loading, setLoading] = useState({
     fetchBookLoading: false,
     writeReviewLoading: false,
+    sendBorrowRequestLoading: false,
+    deleteReviewLoading: false,
   });
   const [book, setBook] = useState(null);
   const { bookId } = useParams();
@@ -101,6 +104,62 @@ const Book = () => {
       toast.error(error?.response?.data?.message || "Internal Server Error");
     } finally {
       setLoading((prev) => ({ ...prev, writeReviewLoading: false }));
+    }
+  };
+
+  const handleBorrowRequestSend = async () => {
+    setLoading((prev) => ({ ...prev, sendBorrowRequestLoading: true }));
+    try {
+      const response = await axios.get(
+        `${
+          import.meta.env.VITE_BACKEND_URL
+        }/borrow/send/borrowRequest/${bookId}`,
+        {
+          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+        }
+      );
+      if (response?.data?.success) {
+        toast.success(response.data.message || "Request Sent Successfully");
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error(error?.response?.data?.message || "Internal Server Error");
+    } finally {
+      setLoading((prev) => ({ ...prev, sendBorrowRequestLoading: false }));
+    }
+  };
+
+  const handleDeleteReview = async (reviewId) => {
+    setLoading((prev) => ({ ...prev, deleteReviewLoading: true }));
+    try {
+      const response = await axios.delete(
+        `${import.meta.env.VITE_BACKEND_URL}/review/delete/${reviewId}`,
+        {
+          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+        }
+      );
+
+      if (response?.data?.success) {
+        toast.success(response.data.message || "Review deleted successfully");
+
+        // Use strict equality and correct state update syntax
+        let newReviewList = book?.reviews.filter(
+          (review) => review._id !== reviewId
+        );
+
+        setBook((prev) => ({ ...prev, reviews: newReviewList }));
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error(error?.response?.data?.message || "Internal Server Error");
+    } finally {
+      setLoading((prev) => ({ ...prev, deleteReviewLoading: false }));
     }
   };
 
@@ -212,13 +271,28 @@ const Book = () => {
                 <Clock className="w-8 h-8" />
                 <span className="font-bold text-3xl">Coming Soon</span>
               </div>
-            ) : book?.availableQuantity > 0 ? (
-              <Button className="text-center w-full font-bold">
-                Request Book
-              </Button>
             ) : (
-              <Button className="text-center w-full font-bold">
-                Join Queue
+              <Button
+                onClick={handleBorrowRequestSend}
+                className={`text-center w-full font-bold text-white ${
+                  book?.availableQuantity > 0
+                    ? "bg-emerald-600 hover:bg-emerald-700"
+                    : "bg-slate-600 hover:bg-slate-700"
+                }`}
+              >
+                {loading.sendBorrowRequestLoading ? (
+                  <Loader />
+                ) : book?.availableQuantity > 0 ? (
+                  <>
+                    <BookOpen strokeWidth={3} className="mr-1 h-4 w-4" />
+                    Request Book
+                  </>
+                ) : (
+                  <>
+                    <Clock strokeWidth={3} className="mr-1 h-4 w-4" />
+                    Join Queue
+                  </>
+                )}
               </Button>
             )}
           </div>
@@ -260,6 +334,7 @@ const Book = () => {
                     type="number"
                     max="5"
                     min="1"
+                    step="0.1"
                     value={formData.rating}
                     onChange={handleValueChange}
                   />
@@ -295,7 +370,6 @@ const Book = () => {
                 key={review?._id}
                 className="border-l-4 border-l-blue-500 bg-white dark:bg-zinc-900 text-slate-900 dark:text-slate-200"
               >
-                {console.log(review)}
                 <CardContent className="pt-5 pb-4">
                   <div className="flex flex-col sm:flex-row items-start gap-4">
                     {/* Avatar */}
@@ -339,9 +413,19 @@ const Book = () => {
 
                       {/* Action */}
                       <div className="mt-3">
-                        <Button size="sm">
-                          <Delete className="w-4 h-4 mr-1" />
-                          Delete
+                        <Button
+                          disabled={loading.deleteReviewLoading}
+                          onClick={() => handleDeleteReview(review?._id)}
+                          size="sm"
+                        >
+                          {loading.deleteReviewLoading ? (
+                            <Loader />
+                          ) : (
+                            <>
+                              <Delete className="w-4 h-4 mr-1" />
+                              Delete
+                            </>
+                          )}
                         </Button>
                       </div>
                     </div>

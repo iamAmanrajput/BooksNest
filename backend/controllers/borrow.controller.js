@@ -10,6 +10,7 @@ const { fineAlertEmail } = require("../templates/finealertEmailTemplate");
 const {
   returnConfirmationEmail,
 } = require("../templates/returnBookEmailTemplate");
+const PER_DAY_FINE = 5;
 
 // send Borrow Request
 exports.sendBorrowRequest = async (req, res) => {
@@ -129,9 +130,20 @@ exports.handleBorrowRequest = async (req, res) => {
 
     // Issue book if available
     if (book.availableQuantity > 0) {
+      const now = new Date();
+
+      // Set issueDate to start of today (00:00:00)
+      const issueDate = new Date(now);
+      issueDate.setHours(0, 0, 0, 0);
+
+      // Set dueDate to (issueDate + 6 days) @ 23:59:59
+      const dueDate = new Date(issueDate);
+      dueDate.setDate(dueDate.getDate() + 6); // 7 days total including today
+      dueDate.setHours(23, 59, 59, 999);
+
       record.status = "issued";
-      record.issueDate = new Date();
-      record.dueDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+      record.issueDate = issueDate;
+      record.dueDate = dueDate;
       book.availableQuantity--;
 
       await Promise.all([
@@ -142,9 +154,6 @@ exports.handleBorrowRequest = async (req, res) => {
           type: "request_approved",
           title: "Book Issued",
           message: `Good news! Your request for '${book.title}' has been approved, and the book has been issued to you.`,
-        }),
-        User.findByIdAndUpdate(record.userId._id, {
-          $push: { borrowedRecords: record._id },
         }),
       ]);
 
@@ -272,17 +281,17 @@ exports.handleReturnRequest = async (req, res) => {
       });
     }
 
-    const today = new Date();
+    const returnDate = record.updatedAt; // when user clicked "return"
     const due = record.dueDate;
 
     let fine = 0;
-    if (today > due) {
-      const lateDays = Math.ceil((today - due) / (1000 * 60 * 60 * 24));
-      fine = lateDays * 5; // ₹5 per day
+    if (returnDate > due) {
+      const lateDays = Math.ceil((returnDate - due) / (1000 * 60 * 60 * 24));
+      fine = lateDays * PER_DAY_FINE; // ₹5 per day
     }
 
     record.status = "returned";
-    record.returnDate = today;
+    record.returnDate = returnDate;
     record.fine = fine;
 
     const book = await Book.findById(record.bookId);
@@ -334,39 +343,43 @@ exports.handleReturnRequest = async (req, res) => {
 
       await queue.save();
 
-      // Try to find the queued BorrowRecord and update it
-      const queuedRecord = await BorrowRecord.findOne({
+      // Generate new issue & due date
+      const now = new Date();
+      const issueDate = new Date(now);
+      issueDate.setHours(0, 0, 0, 0);
+
+      const dueDate = new Date(issueDate);
+      dueDate.setDate(dueDate.getDate() + 6); // Total 7 days including today
+      dueDate.setHours(23, 59, 59, 999);
+
+      // Try to find queued BorrowRecord and update
+      let issuedRecord = await BorrowRecord.findOne({
         userId: nextUser.user,
         bookId: book._id,
         status: "queued",
       });
 
-      let issuedRecord;
-
-      if (queuedRecord) {
-        queuedRecord.status = "issued";
-        queuedRecord.issueDate = new Date();
-        queuedRecord.dueDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-        issuedRecord = await queuedRecord.save();
+      if (issuedRecord) {
+        issuedRecord.status = "issued";
+        issuedRecord.issueDate = issueDate;
+        issuedRecord.dueDate = dueDate;
+        await issuedRecord.save();
       } else {
-        // fallback: create new record
         issuedRecord = await BorrowRecord.create({
           userId: nextUser.user,
           bookId: book._id,
           status: "issued",
-          issueDate: new Date(),
-          dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+          issueDate,
+          dueDate,
         });
       }
 
       book.availableQuantity--;
 
       const user = await User.findById(nextUser.user);
-      user.borrowedRecords.push(issuedRecord._id);
 
       await Promise.all([
         book.save(),
-        user.save(),
         Notification.create({
           user: nextUser.user,
           type: "queue_notification",
@@ -383,9 +396,10 @@ exports.handleReturnRequest = async (req, res) => {
       ]);
     }
 
-    return res
-      .status(200)
-      .json({ success: true, message: "Book return processed successfully." });
+    return res.status(200).json({
+      success: true,
+      message: "Book return processed successfully.",
+    });
   } catch (error) {
     console.error("Error in handleReturnRequest:", error);
     return res.status(500).json({
@@ -439,7 +453,7 @@ exports.renewBook = async (req, res) => {
       });
     }
 
-    // 5. Calculate fine
+    // 5. Calculate fine if overdue
     const today = new Date();
     const previousDueDate = new Date(record.dueDate);
     let fine = 0;
@@ -451,7 +465,6 @@ exports.renewBook = async (req, res) => {
       fine = lateDays * 5;
       record.fine = (record.fine || 0) + fine;
 
-      // Update user's fine and send fine notification
       await Promise.all([
         User.findByIdAndUpdate(record.userId._id, {
           $inc: { fineAmount: fine },
@@ -465,15 +478,21 @@ exports.renewBook = async (req, res) => {
       ]);
     }
 
-    // 6. Update renewal count and extend due date by 7 days
+    // 6. Update renewal count
     record.renewCount += 1;
     record.lastRenewedAt = new Date();
 
-    const newDueDate = new Date();
-    newDueDate.setDate(newDueDate.getDate() + 7);
+    // 7. Extend due date with new logic
+    const issueBase = new Date(); // current time
+    issueBase.setHours(0, 0, 0, 0); // set to start of today
+
+    const newDueDate = new Date(issueBase);
+    newDueDate.setDate(newDueDate.getDate() + 6); // total 7 days incl. today
+    newDueDate.setHours(23, 59, 59, 999); // end of last due day
+
     record.dueDate = newDueDate;
 
-    // 7. Save record and send email
+    // 8. Save record and send email
     await Promise.all([
       record.save(),
       mailSender(
@@ -482,7 +501,7 @@ exports.renewBook = async (req, res) => {
         commonEmailTemplate(
           `Hello ${record.userId.fullName},<br><br>Your book <b>${
             record.bookId.title
-          }</b> has been successfully renewed. Your new due date is <b>${newDueDate.toDateString()}</b>.<br><br>Please return or renew it before the due date to avoid fines.`
+          }</b> has been successfully renewed.<br>Your new due date is <b>${newDueDate.toDateString()}</b>.<br><br>Please return or renew it before the due date to avoid fines.`
         )
       ),
     ]);
@@ -599,14 +618,23 @@ exports.issueBookUsingEmail = async (req, res) => {
     // Book is available
     book.availableQuantity--;
 
+    // Set consistent issue & due date logic
+    const now = new Date();
+    const issueDate = new Date(now);
+    issueDate.setHours(0, 0, 0, 0);
+
+    const dueDate = new Date(issueDate);
+    dueDate.setDate(dueDate.getDate() + 6);
+    dueDate.setHours(23, 59, 59, 999);
+
     await Promise.all([
       book.save(),
       BorrowRecord.create({
         userId: user._id,
         bookId: book._id,
         status: "issued",
-        issueDate: Date.now(),
-        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+        issueDate,
+        dueDate,
       }),
       Notification.create({
         user: user._id,
@@ -618,11 +646,9 @@ exports.issueBookUsingEmail = async (req, res) => {
         user.email,
         "Book Issued Successfully",
         commonEmailTemplate(
-          `Dear ${user.fullName},Your requested book '${
+          `Dear ${user.fullName},<br>Your requested book <b>${
             book.title
-          }' has been successfully issued.<br>Due Date:</b> ${new Date(
-            Date.now() + 7 * 24 * 60 * 60 * 1000
-          ).toLocaleDateString()}<br><br>Please make sure to return it before the due date.`
+          }</b> has been successfully issued.<br><br><b>Due Date:</b> ${dueDate.toDateString()}<br><br>Please make sure to return it before the due date.`
         )
       ),
     ]);
@@ -641,7 +667,6 @@ exports.issueBookUsingEmail = async (req, res) => {
 };
 
 // get BorrowHistory
-const PER_DAY_FINE = 5;
 exports.getBorrowHistory = async (req, res) => {
   try {
     let userId = req.user._id;
@@ -766,7 +791,7 @@ exports.getRequestStats = async (req, res) => {
   }
 };
 
-//  get Requests Data
+// get Requests Data
 exports.fetchRequestData = async (req, res) => {
   try {
     let { email = "", status = "pending", page = 1, limit = 10 } = req.query;

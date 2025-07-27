@@ -26,6 +26,11 @@ BooksNest is a full-stack Library Management System designed to streamline book 
 
 ---
 
+## Screenshot
+
+<img width="1824" height="879" alt="image" src="https://github.com/user-attachments/assets/8b8ea91c-c026-4997-bf0a-ca258480a775" />
+
+
 ## Project Structure
 
 ```
@@ -55,7 +60,7 @@ BooksNest/
       lib/
     public/
     package.json
-  README.md     # (this file)
+  README.md     # (README.md)
 ```
 
 ---

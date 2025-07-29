@@ -20,7 +20,7 @@ import AdminBooks from "./pages/admin/AdminBooks";
 import Requests from "./pages/admin/Requests";
 import AllUsers from "./pages/admin/AllUsers";
 import Analytics from "./pages/admin/Analytics";
-import ForgotPassword from "./pages/user/forgotPassword";
+import ForgotPassword from "./pages/user/ForgotPassword";
 import ResetPassword from "./pages/user/ResetPassword";
 
 const App = () => {

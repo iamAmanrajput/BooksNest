@@ -1,8 +1,10 @@
 const User = require("../models/user.model");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
-const { mailSender } = require("../utils/mailSender");
+const mailSender = require("../utils/mailSender");
 const { commonEmailTemplate } = require("../templates/commonEmailTemplate");
+const dotenv = require("dotenv");
+dotenv.config();
 
 // Register User
 module.exports.register = async (req, res) => {
@@ -186,7 +188,7 @@ exports.forgotPassword = async (req, res) => {
     await user.save();
 
     // Prepare reset link
-    const resetLink = `https://booksnests.vercel.app/reset-password/${token}`;
+    const resetLink = `${process.env.FRONTEND_URL}/reset-password/${token}`;
 
     // Prepare email
     const title = "Password Reset Request";

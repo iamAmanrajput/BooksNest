@@ -20,6 +20,8 @@ import AdminBooks from "./pages/admin/AdminBooks";
 import Requests from "./pages/admin/Requests";
 import AllUsers from "./pages/admin/AllUsers";
 import Analytics from "./pages/admin/Analytics";
+import ForgotPassword from "./pages/user/forgotPassword";
+import ResetPassword from "./pages/user/ResetPassword";
 
 const App = () => {
   return (
@@ -96,6 +98,10 @@ const App = () => {
             </UserRoute>
           }
         />
+
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
 
         {/* Admin Routes */}
         <Route

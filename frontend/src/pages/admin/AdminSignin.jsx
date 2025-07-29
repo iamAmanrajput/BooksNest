@@ -154,14 +154,6 @@ const AdminSignin = () => {
               {loading ? <Loader /> : "Sign in as Admin"}
             </Button>
 
-            {/* Forgot password */}
-            <p className="text-xs text-center text-muted-foreground">
-              Forgot your password?{" "}
-              <Link to="/comingsoon" className="underline">
-                Reset here
-              </Link>
-            </p>
-
             {/* Switch to user login */}
             <p className="text-xs text-center text-muted-foreground">
               Not an admin?{" "}

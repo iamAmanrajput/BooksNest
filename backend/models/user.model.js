@@ -51,6 +51,14 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
+    resetToken: {
+      type: String,
+      select: false,
+    },
+    resetTokenExpire: {
+      type: Date,
+      select: false,
+    },
     wishlist: [
       {
         type: mongoose.Schema.Types.ObjectId,

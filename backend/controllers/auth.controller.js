@@ -1,5 +1,8 @@
 const User = require("../models/user.model");
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
+const { mailSender } = require("../utils/mailSender");
+const { commonEmailTemplate } = require("../templates/commonEmailTemplate");
 
 // Register User
 module.exports.register = async (req, res) => {
@@ -160,5 +163,99 @@ module.exports.logout = async (req, res) => {
   } catch (error) {
     console.error("Logout error:", error);
     return res.status(500).json({ message: "Logout failed" });
+  }
+};
+
+// forgot password
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(200).json({
+        success: true,
+        message: "If this email is registered, a reset link has been sent.",
+      });
+    }
+
+    // Generate token & expiry
+    const token = crypto.randomBytes(32).toString("hex");
+    user.resetToken = token;
+    user.resetTokenExpire = Date.now() + 60 * 60 * 1000; // 1 hour
+    await user.save();
+
+    // Prepare reset link
+    const resetLink = `https://booksnests.vercel.app/reset-password/${token}`;
+
+    // Prepare email
+    const title = "Password Reset Request";
+    const message = commonEmailTemplate(
+      `You requested a password reset.<br/>
+  If you did not request this, please ignore this email.<br/><br/>
+  <a href="${resetLink}">Click here to reset your password</a><br/><br/>
+  Note: This password reset link is valid for only 1 hour.<br/>
+  After that, you will need to request a new password reset.`
+    );
+
+    // Send email
+    await mailSender(user.email, title, message);
+
+    return res.status(200).json({
+      success: true,
+      message: "If this email is registered, a reset link has been sent.",
+    });
+  } catch (err) {
+    console.log("ERROR IN FORGOT PASSWORD:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+
+// reset password
+exports.resetPassword = async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { password } = req.body;
+
+    const user = await User.findOne({
+      resetToken: token,
+      resetTokenExpire: { $gt: Date.now() },
+    }).select("+password");
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "Token invalid or expired",
+      });
+    }
+
+    if (!password || password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 6 characters long",
+      });
+    }
+
+    user.password = password;
+
+    user.resetToken = undefined;
+    user.resetTokenExpire = undefined;
+
+    // User save karo
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Password has been reset successfully",
+    });
+  } catch (error) {
+    console.error("error in resetPassword:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
   }
 };

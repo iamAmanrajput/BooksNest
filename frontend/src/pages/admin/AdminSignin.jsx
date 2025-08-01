@@ -80,7 +80,7 @@ const AdminSignin = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-r from-gray-100 to-white dark:from-zinc-900 dark:to-zinc-800 px-4 relative">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 dark:bg-[#09090b] px-4 relative">
       {/* Mode Toggle Button */}
       <div className="absolute top-4 right-4">
         <ModeToggle />

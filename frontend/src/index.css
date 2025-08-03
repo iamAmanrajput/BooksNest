@@ -149,6 +149,25 @@
   background-color: rgba(255, 255, 255, 0.3); /* light thumb for dark */
 }
 
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(164, 164, 164, 0.5);
+  border-radius: 9999px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(164, 164, 164, 0.5) transparent;
+}
+
 body {
   font-family: "Urbanist", sans-serif;
   font-optical-sizing: auto;

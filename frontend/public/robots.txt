@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://nexlib.in/sitemap.xml
+
+# Disallow admin areas
+Disallow: /admin/
+Disallow: /api/

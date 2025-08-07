@@ -94,6 +94,22 @@ const LandingPage = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // Twak Chatbot
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src = "https://embed.tawk.to/6894221cd923c71926e01dc2/1j21aagrt";
+    script.async = true;
+    script.charset = "UTF-8";
+    script.setAttribute("crossorigin", "*");
+
+    document.body.appendChild(script);
+
+    return () => {
+      // Cleanup: remove script when component unmounts
+      document.body.removeChild(script);
+    };
+  }, []);
+
   // Mouse move listener on window to track cursor position relative to viewport
   useEffect(() => {
     const handleMouseMove = (e) => {

@@ -4,7 +4,7 @@ exports.returnConfirmationEmail = (username, bookTitle, fineAmount) => {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>BooksNest</title>
+  <title>NexLib</title>
   <style>
     body {
       background-color: #09090B; /* Tailwind dark base */
@@ -103,8 +103,8 @@ exports.returnConfirmationEmail = (username, bookTitle, fineAmount) => {
 
     <div class="footer">
       Have questions? Reach us at
-      <a href="mailto:booksnest.app@gmail.com">booksnest.app@gmail.com</a><br/>
-      &copy; ${new Date().getFullYear()} BooksNest Library. All rights reserved.
+      <a href="mailto:contact@nexlib.in">contact@nexlib.in</a><br/>
+      &copy; ${new Date().getFullYear()} NexLib Library. All rights reserved.
     </div>
   </div>
 </body>

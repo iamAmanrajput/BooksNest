@@ -1,5 +1,5 @@
 // UserLayout.jsx
-import React from "react";
+import React, { useEffect } from "react";
 import {
   SidebarProvider,
   SidebarTrigger,
@@ -10,6 +10,19 @@ import Navbar from "@/components/user/Navbar";
 import Footer from "@/components/user/Footer";
 
 const UserLayout = ({ children }) => {
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src = "https://embed.tawk.to/6894221cd923c71926e01dc2/1j21aagrt";
+    script.async = true;
+    script.charset = "UTF-8";
+    script.setAttribute("crossorigin", "*");
+
+    document.body.appendChild(script);
+
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
   return (
     <SidebarProvider>
       <div className="flex h-screen w-full overflow-hidden">

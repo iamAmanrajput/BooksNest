@@ -44,7 +44,7 @@ const AdminSidebar = () => {
           onClick={() => navigate("/admin/dashboard")}
           className="text-xl font-bold cursor-pointer"
         >
-          BooksNest
+          NexLib
         </h3>
       </SidebarHeader>
 
@@ -74,7 +74,7 @@ const AdminSidebar = () => {
       </SidebarContent>
 
       <SidebarFooter className="border-t border-b text-center p-4">
-        <h1 className="font-bold text-lg capitalize">BOOKSNEST ADMIN</h1>
+        <h1 className="font-bold text-lg capitalize">NEXLIB ADMIN</h1>
       </SidebarFooter>
     </Sidebar>
   );

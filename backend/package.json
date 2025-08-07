@@ -20,7 +20,7 @@
   "type": "commonjs",
   "repository": {
     "type": "git",
-    "url": "https://github.com/iamAmanrajput/BooksNest.git"
+    "url": "https://github.com/iamAmanrajput/NexLib.git"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",

@@ -125,9 +125,9 @@ const ForgotPassword = () => {
         <CardHeader className="space-y-2">
           <div className="flex items-center justify-center gap-2">
             <BookOpen className="w-8 h-8 text-customblue" />
-            <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100">
-              BooksNest
-            </h1>
+                          <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100">
+                NexLib
+              </h1>
           </div>
           <CardTitle className="text-xl text-center pt-2">
             Forgot Password
@@ -183,7 +183,7 @@ const ForgotPassword = () => {
         </form>
       </Card>
       <div className="mt-8 text-sm text-muted-foreground text-center">
-        &copy; 2025 BooksNest. All rights reserved.
+        &copy; 2025 NexLib. All rights reserved.
       </div>
     </div>
   );

@@ -35,7 +35,7 @@ const UserSidebar = () => {
           onClick={() => navigate("/")}
           className="text-xl font-bold cursor-pointer"
         >
-          BooksNest
+          NexLib
         </h3>
       </SidebarHeader>
 

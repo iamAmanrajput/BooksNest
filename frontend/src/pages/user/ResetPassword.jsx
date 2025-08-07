@@ -90,7 +90,7 @@ const ResetPassword = () => {
             </Button>
           </CardContent>
           <CardFooter className="flex flex-col gap-2 mt-2 text-center text-xs text-muted-foreground">
-            &copy; 2025 BooksNest. All rights reserved.
+            &copy; 2025 NexLib. All rights reserved.
           </CardFooter>
         </Card>
       </div>
@@ -110,7 +110,7 @@ const ResetPassword = () => {
           <div className="flex items-center justify-center gap-2">
             <BookOpen className="w-8 h-8 text-customblue" />
             <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100">
-              BooksNest
+              NexLib
             </h1>
           </div>
           <CardTitle className="text-xl text-center pt-2">
@@ -170,7 +170,7 @@ const ResetPassword = () => {
       </Card>
 
       <div className="mt-8 text-sm text-muted-foreground text-center">
-        &copy; 2025 BooksNest. All rights reserved.
+        &copy; 2025 NexLib. All rights reserved.
       </div>
     </div>
   );

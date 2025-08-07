@@ -55,7 +55,7 @@ app.use("/api/v1/user", require("./routes/user.routes"));
 app.use("/api/v1/borrow", require("./routes/borrow.routes"));
 
 app.get("/", (req, res) => {
-  res.send("<h1>📚 Welcome to BooksNest Backend</h1>");
+  res.send("<h1>📚 Welcome to NexLib Backend</h1>");
 });
 
 // 404 for undefined routes

@@ -18,7 +18,7 @@ const Footer = () => {
   const { role } = useSelector((state) => state.auth);
   const handleNavigate = () => {
     if (role === "user") {
-      navigate("/");
+      navigate("/home");
     } else {
       navigate("/admin/dashboard");
     }
@@ -35,7 +35,7 @@ const Footer = () => {
                 onClick={handleNavigate}
                 className="text-2xl cursor-pointer flex gap-2 items-center font-bold text-zinc-900 dark:text-zinc-100 mb-4"
               >
-                <BookOpen className="text-customblue" /> <span>BooksNest</span>
+                <BookOpen className="text-customblue" /> <span>NexLib</span>
               </h3>
               <p className="text-zinc-700 text-sm font-bold dark:text-zinc-300 leading-relaxed">
                 Empowering minds through knowledge. Our library offers a wide
@@ -49,10 +49,10 @@ const Footer = () => {
               <div className="flex items-center space-x-3">
                 <Mail className="h-4 w-4 text-blue-500" />
                 <a
-                  href="mailto:booksnest.app@gmail.com"
+                  href="mailto:contact@nexlib.in"
                   className="text-sm text-zinc-700 dark:text-zinc-300"
                 >
-                  booksnest.app@gmail.com
+                  contact@nexlib.in
                 </a>
               </div>
               <div className="flex items-center space-x-3">
@@ -116,7 +116,7 @@ const Footer = () => {
       <div className="px-4 py-6">
         <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
           <div className="text-sm text-zinc-700 dark:text-zinc-400">
-            © 2025 BooksNest Library. All rights reserved.
+            © 2025 NexLib Library. All rights reserved.
           </div>
 
           <div className="flex flex-wrap justify-center md:justify-end gap-4 text-sm">

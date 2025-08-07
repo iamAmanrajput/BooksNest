@@ -5,31 +5,72 @@
     <link rel="icon" type="image/svg+xml" href="/logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <title>BooksNest - Library Management System</title>
+    <title>NexLib - Library Management System</title>
 
     <!-- SEO Meta Tags -->
     <meta
       name="description"
-      content="BooksNest is an efficient Library Management System by Aman Kumar for easy tracking, management, and discovery of books and resources."
+      content="NexLib is an efficient Library Management System by Aman Kumar for easy tracking, management, and discovery of books and resources."
     />
     <meta
       name="keywords"
-      content="library management system, BooksNest, Aman Kumar, book tracking, online library, manage books"
+      content="library management system, NexLib, Aman Kumar, book tracking, online library, manage books"
     />
     <meta name="author" content="Aman Kumar" />
 
     <!-- Open Graph for Social Media -->
-    <meta property="og:title" content="BooksNest - Library Management System" />
+    <meta property="og:title" content="NexLib - Library Management System" />
     <meta
       property="og:description"
       content="Efficient and modern Library Management System by Aman Kumar for organizing and discovering books online."
     />
     <meta property="og:image" content="/logo.png" />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://booksnests.vercel.app/" />
+    <meta property="og:url" content="https://nexlib.in/" />
 
     <!-- Canonical URL -->
-    <link rel="canonical" href="https://booksnests.vercel.app/" />
+    <link rel="canonical" href="https://nexlib.in/" />
+
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "NexLib",
+        "description": "AI-Powered Library Management System for efficient book tracking and management",
+        "url": "https://nexlib.in/",
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": "https://nexlib.in/books?search={search_term_string}",
+          "query-input": "required name=search_term_string"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "NexLib",
+          "founder": {
+            "@type": "Person",
+            "name": "Aman Kumar"
+          }
+        }
+      }
+    </script>
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "NexLib",
+        "url": "https://nexlib.in/",
+        "logo": "https://nexlib.in/logo.png",
+        "description": "AI-Powered Library Management System",
+        "contactPoint": {
+          "@type": "ContactPoint",
+          "email": "nexlib.app@gmail.com",
+          "contactType": "customer service"
+        },
+        "sameAs": ["https://github.com/iamAmanrajput/NexLib"]
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

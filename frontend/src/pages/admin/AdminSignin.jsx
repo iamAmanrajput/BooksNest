@@ -89,12 +89,12 @@ const AdminSignin = () => {
       <Card className="w-full max-w-md shadow-lg rounded-2xl">
         <CardHeader className="space-y-2">
           {/* Branding */}
-          <div className="flex items-center justify-center gap-2">
+          <Link to="/" className="flex items-center justify-center gap-2">
             <BookOpen className="w-8 h-8 text-customblue" />
             <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-100">
-              BooksNest
+              NexLib
             </h1>
-          </div>
+          </Link>
           {/* Title */}
           <CardTitle className="text-xl text-center">
             Welcome Back, Admin – Sign in to Your Dashboard

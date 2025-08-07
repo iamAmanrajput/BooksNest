@@ -10,7 +10,7 @@ const GuestRoute = ({ children }) => {
   }
 
   if (isAuthenticated && role === "user") {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/home" replace />;
   }
 
   return children;

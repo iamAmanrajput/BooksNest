@@ -22,11 +22,21 @@ import AllUsers from "./pages/admin/AllUsers";
 import Analytics from "./pages/admin/Analytics";
 import ForgotPassword from "./pages/user/ForgotPassword";
 import ResetPassword from "./pages/user/ResetPassword";
+import LandingPage from "./pages/user/LandingPage";
 
 const App = () => {
   return (
     <div className="min-h-screen w-full bg-white text-zinc-900 dark:bg-zinc-900 dark:text-zinc-100 transition-colors duration-300">
       <Routes>
+        <Route
+          path="/"
+          element={
+            <GuestRoute>
+              <LandingPage />
+            </GuestRoute>
+          }
+        />
+
         <Route
           path="/signup"
           element={
@@ -45,7 +55,7 @@ const App = () => {
         />
 
         <Route
-          path="/"
+          path="/home"
           element={
             <UserRoute>
               <UserLayout>

@@ -1,6 +1,6 @@
-# BooksNest
+# NexLib
 
-BooksNest is a full-stack Library Management System designed to streamline book borrowing, user management, and library analytics. It features a robust backend built with Node.js, Express, and MongoDB, and a modern, responsive frontend using React, Redux, and TailwindCSS.
+NexLib is a full-stack Library Management System designed to streamline book borrowing, user management, and library analytics. It features a robust backend built with Node.js, Express, and MongoDB, and a modern, responsive frontend using React, Redux, and TailwindCSS.
 
 ---
 
@@ -34,7 +34,7 @@ BooksNest is a full-stack Library Management System designed to streamline book 
 ## Project Structure
 
 ```
-BooksNest/
+NexLib/
   backend/      # Node.js/Express API
     app.js
     controllers/

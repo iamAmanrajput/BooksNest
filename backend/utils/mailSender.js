@@ -16,7 +16,7 @@ const mailSender = async (email, title, body) => {
 
     //Send mail
     let info = await transporter.sendMail({
-      from: "BooksNest",
+      from: "NexLib",
       to: `${email}`,
       subject: `${title}`,
       html: `${body}`,

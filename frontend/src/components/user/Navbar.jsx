@@ -39,7 +39,7 @@ const Navbar = () => {
       toast.error(error?.response?.data?.message || "Internal Server Error");
     } finally {
       dispatch(setUserLogout());
-      navigate("/signin");
+      navigate("/");
     }
   };
 

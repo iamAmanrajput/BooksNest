@@ -18,7 +18,7 @@ const Footer = () => {
   const { role } = useSelector((state) => state.auth);
   const handleNavigate = () => {
     if (role === "user") {
-      navigate("/");
+      navigate("/home");
     } else {
       navigate("/admin/dashboard");
     }

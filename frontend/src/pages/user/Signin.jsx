@@ -70,7 +70,7 @@ const Signin = () => {
       if (response?.data?.success) {
         toast.success(response?.data?.message || "User Sign In Successfully");
         dispatch(setUserLogin(response?.data));
-        navigate("/");
+        navigate("/home");
       } else {
         return toast.error(response?.data?.message || "Internal Server Error");
       }

@@ -68,7 +68,7 @@ exports.overdueEmailTemplate = (fullName, bookTitle, dueDate) => {
     <!-- <a href="https://yourdomain.com/dashboard" class="cta-button">Return Now</a> -->
 
     <p class="footer">
-      Thank you,<br />BooksNest Team
+      Thank you,<br />NexLib Team
     </p>
   </div>
 </body>

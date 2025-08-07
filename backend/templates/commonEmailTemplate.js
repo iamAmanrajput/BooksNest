@@ -4,7 +4,7 @@ exports.commonEmailTemplate = (message) => {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>BooksNest</title>
+  <title>NexLib</title>
   <style>
     body {
       background-color: #09090B; /* true dark */
@@ -86,7 +86,7 @@ exports.commonEmailTemplate = (message) => {
     </div>
 
     <div class="footer">
-      &copy; ${new Date().getFullYear()} BooksNest Library. All rights reserved.
+      &copy; ${new Date().getFullYear()} NexLib Library. All rights reserved.
     </div>
   </div>
 </body>

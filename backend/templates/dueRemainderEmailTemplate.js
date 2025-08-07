@@ -49,7 +49,7 @@ exports.dueEmailTemplate = (fullName, bookTitle, dueDate) => {
       Please return or renew it in time to avoid a fine.
     </p>
     <p class="footer">
-      Thank you,<br />BooksNest Team
+      Thank you,<br />NexLib Team
     </p>
   </div>
 </body>

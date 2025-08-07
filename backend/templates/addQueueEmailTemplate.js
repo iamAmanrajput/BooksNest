@@ -85,11 +85,11 @@ exports.addQueueEmailTemplate = (fullName, bookTitle, position) => {
       <p>You’ve been added to the queue for the book <span class="highlight">"${bookTitle}"</span>.</p>
       <p>Your current queue position is: <span class="highlight">#${position}</span>.</p>
       <p>We’ll notify you once it becomes available for borrowing.</p>
-      <p>Thanks for staying with BooksNest!</p>
+      <p>Thanks for staying with NexLib!</p>
     </div>
 
     <div class="footer">
-      &copy; ${new Date().getFullYear()} BooksNest Library. All rights reserved.
+      &copy; ${new Date().getFullYear()} NexLib Library. All rights reserved.
     </div>
   </div>
 </body>

@@ -92,8 +92,8 @@ exports.fineAlertEmail = (username, bookTitle, fineAmount) => {
     </div>
 
     <div class="footer">
-      Need help? Reach out at <a href="mailto:support@booksnest.com">support@booksnest.com</a><br/>
-      &copy; ${new Date().getFullYear()} BooksNest Library. All rights reserved.
+        Need help? Reach out at <a href="mailto:contact@nexlib.in">contact@nexlib.in</a><br/>
+      &copy; ${new Date().getFullYear()} NexLib Library. All rights reserved.
     </div>
   </div>
 </body>

@@ -30,7 +30,7 @@ const PageNotFound = () => {
                   <BookOpen className="w-12 h-12 text-customblue" />
                 </div>
                 <h3 className="text-3xl font-extrabold text-zinc-900 dark:text-zinc-100 select-none">
-                  BooksNest
+                  NexLib
                 </h3>
               </div>
 

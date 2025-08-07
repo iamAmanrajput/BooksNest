@@ -96,16 +96,24 @@ const LandingPage = () => {
 
   // Twak Chatbot
   useEffect(() => {
+    // Define Tawk_API and onLoad
+    window.Tawk_API = window.Tawk_API || {};
+    window.Tawk_API.onLoad = function () {
+      window.Tawk_API.minimize(); // Minimize widget after load
+    };
+
+    // Create script
     const script = document.createElement("script");
     script.src = "https://embed.tawk.to/6894221cd923c71926e01dc2/1j21aagrt";
     script.async = true;
     script.charset = "UTF-8";
     script.setAttribute("crossorigin", "*");
 
+    // Append to body
     document.body.appendChild(script);
 
+    // Clean up on unmount
     return () => {
-      // Cleanup: remove script when component unmounts
       document.body.removeChild(script);
     };
   }, []);

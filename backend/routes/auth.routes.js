@@ -7,10 +7,13 @@ const {
   logout,
   forgotPassword,
   resetPassword,
+  verifyEmail,
 } = require("../controllers/auth.controller");
 const { isLoggedIn } = require("../middlewares/verifyToken");
 
 router.post("/register", register);
+
+router.get("/verify", verifyEmail);
 
 router.post("/login", login);
 

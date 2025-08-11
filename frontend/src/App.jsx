@@ -23,6 +23,7 @@ import Analytics from "./pages/admin/Analytics";
 import ForgotPassword from "./pages/user/ForgotPassword";
 import ResetPassword from "./pages/user/ResetPassword";
 import LandingPage from "./pages/user/LandingPage";
+import VerifyToken from "./pages/user/VerifyToken";
 
 const App = () => {
   return (
@@ -45,6 +46,16 @@ const App = () => {
             </GuestRoute>
           }
         />
+
+        <Route
+          path="/verify"
+          element={
+            <GuestRoute>
+              <VerifyToken />
+            </GuestRoute>
+          }
+        />
+
         <Route
           path="/signin"
           element={

@@ -59,6 +59,21 @@ const userSchema = new mongoose.Schema(
       type: Date,
       select: false,
     },
+    isVerified: {
+      type: Boolean,
+      default: false,
+      select: false,
+    },
+    verificationToken: {
+      type: String,
+      default: null,
+      select: false,
+    },
+    verificationTokenExpire: {
+      type: Date,
+      default: null,
+      select: false,
+    },
     wishlist: [
       {
         type: mongoose.Schema.Types.ObjectId,

@@ -358,7 +358,7 @@ const MyProfile = () => {
             <Avatar className="w-36 h-36 border-4 border-zinc-300 dark:border-zinc-700 shadow-xl">
               <AvatarImage
                 src={userData?.profilePic?.imageUrl}
-                alt={userData?.fullName || "aman"}
+                alt={userData?.fullName || "NA"}
               />
               <AvatarFallback className="text-3xl capitalize bg-zinc-800 text-white border-2 border-zinc-700">
                 {userData?.fullName
@@ -378,10 +378,10 @@ const MyProfile = () => {
 
         {/* Name + Email + Badges */}
         <div className="flex flex-col items-center gap-2 mb-6">
-          <h1 className="text-2xl font-bold">Aman Singh</h1>
+          <h1 className="text-2xl font-bold">{userData?.fullName || "NA"}</h1>
           <p className="flex items-center gap-2 text-sm font-semibold text-zinc-500 dark:text-zinc-400">
             <Mail className="text-customblue h-5 w-5" />
-            aman.it360@gmail.com
+            {userData?.email || "NA"}
           </p>
           <div className="flex flex-wrap gap-2 justify-center mt-2">
             <Badge className="bg-zinc-200 text-zinc-800 border border-zinc-300 hover:bg-zinc-300 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700 dark:hover:bg-zinc-700">

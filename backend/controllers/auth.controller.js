@@ -6,6 +6,13 @@ const { commonEmailTemplate } = require("../templates/commonEmailTemplate");
 const dotenv = require("dotenv");
 dotenv.config();
 
+// generate verification token
+function generateVerificationToken(expiryMinutes = 15) {
+  const token = crypto.randomBytes(32).toString("hex");
+  const expiresAt = Date.now() + expiryMinutes * 60 * 1000; // expiry in ms
+  return { token, expiresAt };
+}
+
 // Register User
 module.exports.register = async (req, res) => {
   let { fullName, email, password, gender } = req.body;
@@ -35,18 +42,47 @@ module.exports.register = async (req, res) => {
     });
   }
 
+  const boyProfilePic = `https://avatar.iran.liara.run/public/boy?username=${fullName}`;
+  const girlProfilePic = `https://avatar.iran.liara.run/public/girl?username=${fullName}`;
+  const profilePic = gender === "male" ? boyProfilePic : girlProfilePic;
+
   try {
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ email }).select("+isVerified");
     if (existingUser) {
-      return res.status(400).json({
-        success: false,
-        message: "User already exists",
-      });
+      if (existingUser.isVerified) {
+        return res.status(400).json({
+          success: false,
+          message: "User already exists",
+        });
+      } else {
+        const { token, expiresAt } = generateVerificationToken();
+        existingUser.verificationToken = token;
+        existingUser.verificationTokenExpire = expiresAt;
+        existingUser.fullName = fullName;
+        existingUser.password = password;
+        existingUser.gender = gender;
+        existingUser.profilePic.imageUrl = profilePic;
+        await existingUser.save();
+        const verificationLink = `${process.env.CLIENT_URL}/verify?token=${token}`;
+        await mailSender(
+          email,
+          "Verify your email - NexLib",
+          commonEmailTemplate(`
+          <h1>Verify Your Email</h1>
+          <p>Hello ${fullName},</p>
+          <p>Please click the link below to verify your email address:</p>
+          <a href="${verificationLink}">Verify Email</a>
+          <p>This link will expire in 15 minutes.</p>
+        `)
+        );
+        return res.status(200).json({
+          success: true,
+          message: "Verification email resent. Please check your inbox.",
+        });
+      }
     }
 
-    const boyProfilePic = `https://avatar.iran.liara.run/public/boy?username=${fullName}`;
-    const girlProfilePic = `https://avatar.iran.liara.run/public/girl?username=${fullName}`;
-    const profilePic = gender === "male" ? boyProfilePic : girlProfilePic;
+    const { token, expiresAt } = generateVerificationToken();
 
     const newUser = await User.create({
       fullName,
@@ -56,14 +92,79 @@ module.exports.register = async (req, res) => {
       profilePic: {
         imageUrl: profilePic,
       },
+      verificationTokenExpire: expiresAt,
+      verificationToken: token,
     });
+
+    const verificationLink = `${process.env.CLIENT_URL}/verify?token=${token}`;
+    await mailSender(
+      email,
+      "Verify your email - NexLib",
+      commonEmailTemplate(`
+          <h1>Verify Your Email</h1>
+          <p>Hello ${fullName},</p>
+          <p>Please click the link below to verify your email address:</p>
+          <a href="${verificationLink}">Verify Email</a>
+          <p>This link will expire in 15 minutes.</p>
+        `)
+    );
 
     return res.status(201).json({
       success: true,
-      message: "User registered successfully",
+      message: "User registered successfully. Verification email sent.",
     });
   } catch (error) {
     console.error("User Registration Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong. Please try again later.",
+    });
+  }
+};
+
+// verify email
+module.exports.verifyEmail = async (req, res) => {
+  try {
+    const { token } = req.query;
+
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        message: "Verification token is required",
+      });
+    }
+
+    const user = await User.findOne({
+      verificationToken: token,
+      verificationTokenExpire: { $gt: Date.now() },
+    }).select("+isVerified");
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or expired verification token",
+      });
+    }
+
+    if (user.isVerified) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is already verified",
+      });
+    }
+
+    user.isVerified = true;
+    user.verificationToken = null;
+    user.verificationTokenExpire = null;
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Email verified successfully",
+      data: user,
+    });
+  } catch (error) {
+    console.error("Email Verification Error:", error);
     return res.status(500).json({
       success: false,
       message: "Something went wrong. Please try again later.",
@@ -85,12 +186,19 @@ module.exports.login = async (req, res) => {
   }
 
   try {
-    const user = await User.findOne({ email }).select("+password");
+    const user = await User.findOne({ email }).select("+password +isVerified");
 
     if (!user) {
       return res.status(404).json({
         success: false,
         message: "User not found",
+      });
+    }
+
+    if (!user.isVerified) {
+      return res.status(403).json({
+        success: false,
+        message: "Your email address is not verified",
       });
     }
 

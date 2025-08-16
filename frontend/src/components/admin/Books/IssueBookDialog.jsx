@@ -40,7 +40,6 @@ const IssueBookDialog = ({ bookDetails, onQuantityUpdate }) => {
       return;
     }
 
-    // Optional: Email format validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(trimmedEmail)) {
       toast.error("Invalid email format");

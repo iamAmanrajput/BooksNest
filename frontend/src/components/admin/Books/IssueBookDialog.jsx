@@ -93,7 +93,7 @@ const IssueBookDialog = ({ bookDetails, onQuantityUpdate }) => {
           }`}
         >
           <Send className="h-4 w-4" />
-          Borrow
+          Lend
         </Button>
       </DialogTrigger>
 

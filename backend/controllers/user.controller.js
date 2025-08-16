@@ -9,7 +9,7 @@ exports.getAllUsers = async (req, res) => {
     page = parseInt(page) || 1;
     limit = parseInt(limit) || 10;
 
-    const query = {};
+    const query = { isVerified: true };
 
     if (email.trim()) {
       email = email.trim().toLowerCase();

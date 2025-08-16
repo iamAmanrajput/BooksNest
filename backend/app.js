@@ -47,6 +47,7 @@ app.use("/api/v1/auth", require("./routes/auth.routes"));
 app.use("/api/v1/review", require("./routes/review.routes"));
 app.use("/api/v1/profile", require("./routes/profile.routes"));
 app.use("/api/v1/notification", require("./routes/notification.route"));
+app.use("/api/v1/payment", require("./routes/payment.routes"));
 
 // Admin - Routes
 app.use("/api/v1/admin", require("./routes/admin.routes"));

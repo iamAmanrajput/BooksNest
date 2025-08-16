@@ -40,7 +40,6 @@ const IssueBookDialog = ({ bookDetails, onQuantityUpdate }) => {
       return;
     }
 
-    // Optional: Email format validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(trimmedEmail)) {
       toast.error("Invalid email format");
@@ -93,7 +92,7 @@ const IssueBookDialog = ({ bookDetails, onQuantityUpdate }) => {
           }`}
         >
           <Send className="h-4 w-4" />
-          Borrow
+          Lend
         </Button>
       </DialogTrigger>
 

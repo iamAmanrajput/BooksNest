@@ -53,6 +53,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useDispatch } from "react-redux";
 import { setUserLogout } from "@/redux/slices/authSlice";
 import { useNavigate } from "react-router-dom";
+import PayFine from "@/components/user/profile/PayFine";
 
 const MyProfile = () => {
   const [userData, setUserData] = useState(null);
@@ -317,6 +318,10 @@ const MyProfile = () => {
     setProfilePicPreview("");
   };
 
+  const clearFine = () => {
+    setUserData((prev) => ({ ...prev, fineAmount: 0 }));
+  };
+
   return loading.fetchUserLoading ? (
     <div className="flex justify-center my-10">
       {" "}
@@ -423,6 +428,12 @@ const MyProfile = () => {
           </code>
         </div>
       </div>
+
+      {/* PayFine Container */}
+      <PayFine
+        clearFineHandler={clearFine}
+        amount={userData?.fineAmount || 0}
+      />
 
       {/* Personel Information */}
       <Card className="bg-white mt-6 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-lg w-full">

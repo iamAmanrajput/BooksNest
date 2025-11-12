@@ -39,7 +39,7 @@ const AnalyticsStats = () => {
         title="Total Books"
         value={loading ? null : analyticsStats?.totalBooks}
         color="blue"
-        percentageChange={analyticsStats?.booksPercentIncrease.toFixed(1)}
+        percentageChange={analyticsStats?.booksPercentIncrease?.toFixed(1)}
         showTrend={true}
       />
       <AnalyticsCard
@@ -47,7 +47,7 @@ const AnalyticsStats = () => {
         title="Total Users"
         value={loading ? null : analyticsStats?.totalUsers}
         color="cyan"
-        percentageChange={analyticsStats?.usersPercentIncrease.toFixed(1)}
+        percentageChange={analyticsStats?.usersPercentIncrease?.toFixed(1)}
         showTrend={true}
       />
       <AnalyticsCard

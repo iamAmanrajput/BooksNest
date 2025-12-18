@@ -97,17 +97,22 @@ module.exports.register = async (req, res) => {
     });
 
     const verificationLink = `${process.env.CLIENT_URL}/verify?token=${token}`;
-    await mailSender(
-      email,
-      "Verify your email - NexLib",
-      commonEmailTemplate(`
+    try {
+      await mailSender(
+        email,
+        "Verify your email - NexLib",
+        commonEmailTemplate(`
           <h1>Verify Your Email</h1>
           <p>Hello ${fullName},</p>
           <p>Please click the link below to verify your email address:</p>
           <a href="${verificationLink}">Verify Email</a>
           <p>This link will expire in 15 minutes.</p>
         `)
-    );
+      );
+    } catch (err) {
+      await User.findByIdAndDelete(newUser._id);
+      throw err;
+    }
 
     return res.status(201).json({
       success: true,

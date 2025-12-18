@@ -1,29 +1,28 @@
 const nodemailer = require("nodemailer");
-const dotenv = require("dotenv");
-dotenv.config();
+require("dotenv").config();
+
+const transporter = nodemailer.createTransport({
+  host: process.env.MAIL_HOST,
+  port: Number(process.env.MAIL_PORT),
+  auth: {
+    user: process.env.MAIL_USER,
+    pass: process.env.MAIL_PASS,
+  },
+});
 
 const mailSender = async (email, title, body) => {
   try {
-    //Create Transporter
-    let transporter = nodemailer.createTransport({
-      host: process.env.MAIL_HOST,
-      port: process.env.MAIL_PORT,
-      auth: {
-        user: process.env.MAIL_USER,
-        pass: process.env.MAIL_PASS,
-      },
+    const info = await transporter.sendMail({
+      from: "NexLib",
+      to: email,
+      subject: title,
+      html: body,
     });
 
-    //Send mail
-    let info = await transporter.sendMail({
-      from: "NexLib",
-      to: `${email}`,
-      subject: `${title}`,
-      html: `${body}`,
-    });
     return info;
   } catch (error) {
-    console.log(err.message);
+    console.error("Mail error:", error.message);
+    throw error;
   }
 };
 

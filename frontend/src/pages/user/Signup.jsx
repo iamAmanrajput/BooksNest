@@ -248,7 +248,7 @@ const Signup = () => {
             </CardContent>
 
             <CardFooter className="flex flex-col gap-2 mt-4">
-              <Button type="submit" className="w-full">
+              <Button disabled={loading} type="submit" className="w-full">
                 {loading === true ? <Loader /> : "Sign Up"}
               </Button>
               <p className="text-xs text-center text-muted-foreground">

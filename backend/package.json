@@ -33,7 +33,6 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.15.1",
     "node-cron": "^4.2.0",
-    "nodemailer": "^7.0.3",
     "nodemon": "^3.1.10",
     "razorpay": "^2.9.6",
     "resend": "^6.6.0"

@@ -293,12 +293,22 @@ const Signup = () => {
                 <section className="space-y-6">
                   <div className="text-center text-sm text-muted-foreground">
                     {formData.email ? (
-                      <p>{`We sent a verification link to ${obfuscatedEmail()}. Open your inbox and click the link to verify.`}</p>
+                      <p>
+                        {`We sent a verification link to ${obfuscatedEmail()}. Open your inbox and click the link to verify.`}
+                        <span className="block mt-1">
+                          If you don’t see it in your inbox, please check your
+                          spam folder.
+                        </span>
+                      </p>
                     ) : (
                       <p>
                         {
                           "We sent a verification link to your email address. Open your inbox and click the link to verify."
                         }
+                        <span className="block font-bold mt-1">
+                          If you don’t see it in your inbox, please check your
+                          spam folder.
+                        </span>
                       </p>
                     )}
                   </div>

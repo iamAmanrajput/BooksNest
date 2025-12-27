@@ -1,27 +1,19 @@
-const nodemailer = require("nodemailer");
-require("dotenv").config();
+const { Resend } = require("resend");
 
-const transporter = nodemailer.createTransport({
-  host: process.env.MAIL_HOST,
-  port: Number(process.env.MAIL_PORT),
-  auth: {
-    user: process.env.MAIL_USER,
-    pass: process.env.MAIL_PASS,
-  },
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const mailSender = async (email, title, body) => {
   try {
-    const info = await transporter.sendMail({
-      from: "NexLib",
+    const response = await resend.emails.send({
+      from: "NexLib <onboarding@resend.dev>",
       to: email,
       subject: title,
       html: body,
     });
 
-    return info;
+    return response;
   } catch (error) {
-    console.error("Mail error:", error.message);
+    console.error("Mail error:", error);
     throw error;
   }
 };
